@@ -1,8 +1,8 @@
     /* 
 	Name	: PlayerbotPaladinAI.cpp
-    Complete: maybe around 24% :D
+    Complete: maybe around 27% :D
     Author	: Natsukawa
-	Version : 0.20
+	Version : 0.32
     */
 
 #include "PlayerbotPaladinAI.h"
@@ -17,8 +17,10 @@ PlayerbotPaladinAI::PlayerbotPaladinAI(Player* const master, Player* const bot, 
 	FROST_RESISTANCE_AURA		= ai->getSpellId("frost resistance aura");
 	CONCENTRATION_AURA			= ai->getSpellId("concentration aura");
 	CRUSADER_AURA				= ai->getSpellId("crusader aura");
+	CRUSADER_STRIKE				= ai->getSpellId("crusader strike");
 	SEAL_OF_COMMAND				= 20375; //For some reason getSpellId was not working. Replaced with spell id
 	JUDGEMENT_OF_LIGHT			= ai->getSpellId("judgement of light");
+	JUDGEMENT_OF_WISDOM			= ai->getSpellId("judgement of wisdom");
 	FLASH_OF_LIGHT				= ai->getSpellId("flash of light");
 	HOLY_LIGHT					= ai->getSpellId("holy light");
 	DIVINE_SHIELD				= 642; // ai->getSpellId("divine shield");
@@ -93,56 +95,74 @@ void PlayerbotPaladinAI::DoNextCombatManeuver(Unit *pTarget){
 	if (DEVOTION_AURA > 0) {
 		(!m_bot->HasAura(DEVOTION_AURA, 0) && pTarget->getClass() == CLASS_PALADIN && GetAI()->CastSpell (DEVOTION_AURA, *m_bot));
 	}
-	
+	if (ai->GetHealthPercent() < 55) {
+		SpellSequence = Healing;
+	}
+	else {
+		SpellSequence = Combat;
+	}
 	
 	switch (SpellSequence) {
-	
-		case SPELL_RET:
-				if (SEAL_OF_COMMAND > 0 && LastSpellRet < 1 && ai->GetManaPercent() >= 25) {
-			
-						ai->CastSpell(SEAL_OF_COMMAND, *pTarget);
-						SpellSequence = SPELL_HOLYP;
-						LastSpellRet++;
-						break;
-				
-				}
-				else if (JUDGEMENT_OF_LIGHT > 0 && LastSpellRet < 2 && ai->GetManaPercent() >=15) {
-        						
-						ai->CastSpell(JUDGEMENT_OF_LIGHT, *pTarget);
-						ai->CastSpell(SEAL_OF_COMMAND, *pTarget);
-						SpellSequence = SPELL_HOLYP;
-						LastSpellRet++;
-						break;
-				}
-				else if (HAMMER_OF_JUSTICE > 0 && LastSpellRet < 3 && ai->GetManaPercent() >=15) {
-						
-						ai->CastSpell(HAMMER_OF_JUSTICE, *pTarget);
-						SpellSequence = SPELL_HOLYP;
-						LastSpellRet++;
-						break;
-				}
-
-					LastSpellRet = 0;
-
-		case SPELL_HOLYP:
-				if (HOLY_LIGHT > 0 && LastSpellHolyp < 1 && ai->GetHealthPercent() < 45 && ai->GetManaPercent() >= 20) {
-						ai->CastSpell(HOLY_LIGHT);
-						SpellSequence = SPELL_RET;
-						LastSpellHolyp++;
-						break;
-				}
-				else if (FLASH_OF_LIGHT > 0 && LastSpellHolyp < 2 && ai->GetHealthPercent() < 75 && ai->GetManaPercent() >= 20) {
-						ai->CastSpell(FLASH_OF_LIGHT);
-						SpellSequence = SPELL_RET;
-						LastSpellHolyp++;
-						break;
-				}
-
-				else {
-					LastSpellHolyp = 0;
-					SpellSequence = SPELL_RET;
-				}
-				
+		case Combat:
+			//GetAI()->TellMaster("Combat");
+			if (JUDGEMENT_OF_LIGHT > 0 && CombatCounter < 1 && ai->GetManaPercent() >=15) {
+        		GetAI()->CastSpell (JUDGEMENT_OF_LIGHT, *pTarget);
+				//GetAI()->TellMaster("Judgement");
+				CombatCounter++;
+				break;
+			}
+			else if (SEAL_OF_COMMAND > 0 && CombatCounter < 2 && ai->GetManaPercent() >= 25) {
+				GetAI()->CastSpell (SEAL_OF_COMMAND, *m_bot);
+				//GetAI()->TellMaster("SealC");
+				CombatCounter++;
+				break;
+			}
+			else if (HAMMER_OF_JUSTICE > 0 && CombatCounter < 3 && ai->GetManaPercent() >=15) {
+				GetAI()->CastSpell (HAMMER_OF_JUSTICE, *pTarget);
+				//GetAI()->TellMaster("Hammer");
+				CombatCounter++;
+				break;
+			}
+			else if (CRUSADER_STRIKE > 0 && CombatCounter < 4 && ai->GetManaPercent() >=15) {
+				GetAI()->CastSpell (CRUSADER_STRIKE, *pTarget);
+				GetAI()->TellMaster("CStrike");
+				CombatCounter++;
+				break;
+			}
+			else if (CombatCounter < 5) {
+				CombatCounter = 0;
+				//GetAI()->TellMaster("CombatCounter Reset");
+				break;
+			}
+			else {
+				CombatCounter = 0;
+				//GetAI()->TellMaster("Counter = 0");
+				break;
+			}
+		case Healing:
+			//GetAI()->TellMaster("Healing");
+			if (HOLY_LIGHT > 0 && HealCounter < 1 && ai->GetHealthPercent() < 45 && ai->GetManaPercent() >= 20) {
+				GetAI()->CastSpell (HOLY_LIGHT);
+				//GetAI()->TellMaster("HLight1");
+				HealCounter++;
+				break;
+			}
+			else if (HOLY_LIGHT > 0 && HealCounter < 2 && ai->GetHealthPercent() < 75 && ai->GetManaPercent() >= 20) {
+				GetAI()->CastSpell (HOLY_LIGHT);
+				//GetAI()->TellMaster("Hlight2");
+				HealCounter++;
+				break;
+			}
+			else if (HealCounter < 3) {
+				HealCounter = 0;
+				//GetAI()->TellMaster("HealCounter Reset");
+				break;
+			}
+			else {
+				HealCounter = 0;
+				//GetAI()->TellMaster("Counter = 0");
+				break;
+			}
 	}
 				
 
@@ -164,8 +184,6 @@ void PlayerbotPaladinAI::DoNonCombatActions(){
 		return;
 	}
 
-	SpellSequence = SPELL_RET;
-
 	// buff myself
 	if (BLESSING_OF_MIGHT > 0) {
 		(!m_bot->HasAura(BLESSING_OF_MIGHT, 0) && GetAI()->CastSpell (BLESSING_OF_MIGHT, *m_bot));
@@ -177,13 +195,9 @@ void PlayerbotPaladinAI::DoNonCombatActions(){
 		GetAI()->CastSpell (SEAL_OF_COMMAND, *m_bot);
 	}
 		
-		// buff master... original buff seq.
-			//	if (BLESSING_OF_MIGHT > 0) {
-			//		(!GetMaster()->HasAura(BLESSING_OF_MIGHT,0) && GetAI()->CastSpell (BLESSING_OF_MIGHT, *(GetMaster())) );
-			//	}
 
-		//Select Class buff seq.
-		///Process Who is my master --> get the player class --> aura already present if not then proced --> cast the spell
+	//Select Class buff seq.
+	///Process Who is my master --> get the player class --> aura already present if not then proced --> cast the spell
 	//Priest 
 	if (BLESSING_OF_WISDOM > 0) {
 				((GetMaster()->getClass()) == CLASS_PRIEST && !GetMaster()->HasAura(GREATER_BLESSING_OF_WISDOM, 0) && !GetMaster()->HasAura(BLESSING_OF_WISDOM, 0) && GetAI()->CastSpell (BLESSING_OF_WISDOM, *(GetMaster())) );
@@ -267,7 +281,7 @@ void PlayerbotPaladinAI::DoNonCombatActions(){
 		return;
 	}
 
-	//This is a paladin, self healing maybe? ;D Out of combat he can take car of him self, no ned to be healed.
+	//This is a paladin, self healing maybe? ;D Out of combat he can take care of him self, no ned to be healed.
 	//Causes server to crash in some cases /disabled for now/
 /*	if (m_bot->getStandState() != PLAYER_STATE_NONE)
 		m_bot->SetStandState(PLAYER_STATE_NONE);

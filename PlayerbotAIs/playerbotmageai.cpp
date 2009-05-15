@@ -1,4 +1,3 @@
-
 #include "PlayerbotMageAI.h"
 
 class PlayerbotAI;
@@ -365,7 +364,3 @@ void PlayerbotMageAI::DoNonCombatActions(){
 */
 
 } // end DoNonCombatActions
-
-void PlayerbotMageAI::BuffPlayer(Player* target) {
-	GetAI()->CastSpell(ARCANE_INTELLECT, *target);
-}
