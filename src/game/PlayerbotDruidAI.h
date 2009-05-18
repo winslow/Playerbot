@@ -4,7 +4,10 @@
 #include "PlayerbotClassAI.h"
 
 enum {
-	SPELL_ATTACK
+	DruidCombat,
+	DruidTank,
+	DruidHeal,
+	DruidSpell
 };
 
 
@@ -29,9 +32,9 @@ class MANGOS_DLL_SPEC PlayerbotDruidAI : PlayerbotClassAI {
 		void HealTarget (Unit& target, uint8 hp);
 		
 		// attack, debuff, buff & heal
-		uint32 MOONFIRE, ROOTS, FAERIE_FIRE, WRATH, STARFALL, STARFIRE, MANGLE, MARK_OF_THE_WILD, THORNS, LIFEBLOOM, REJUVENATION, REGROWTH, NOURISH, HEALING_TOUCH, MANA_REJUVENATION;
+		uint32 CLAW, COWER, TIGERS_FURY, RAKE, RIP, FEROCIOUS_BITE, MAIM, CAT_FORM, DIRE_BEAR_FORM, MOONFIRE, ROOTS, FAERIE_FIRE, WRATH, STARFALL, STARFIRE, MANGLE, MARK_OF_THE_WILD, THORNS, LIFEBLOOM, REJUVENATION, REGROWTH, NOURISH, HEALING_TOUCH, MANA_REJUVENATION;
 
-		uint32 SpellSequence, LastSpellAttack;
+		uint32 SpellSequence, DruidSpellCombat;
 		
 };
 
