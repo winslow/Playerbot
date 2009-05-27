@@ -10,6 +10,8 @@ class Object;
 class Item;
 class PlayerbotClassAI;
 
+#define BOTLOOT_DISTANCE 25.0f
+
 class MANGOS_DLL_SPEC PlayerbotAI {
 	public:
 		enum ScenarioType {
@@ -42,6 +44,24 @@ class MANGOS_DLL_SPEC PlayerbotAI {
 
 		typedef std::map<uint32, uint32> BotNeedItem;
 		typedef std::list<uint64> BotLootCreature;
+
+		// attacker query used in PlayerbotAI::FindAttacker()
+		enum ATTACKERINFOTYPE {
+			AIT_NONE			= 0x00,
+			AIT_LOWESTTHREAT	= 0x01,
+			AIT_HIGHESTTHREAT	= 0x02,
+			AIT_VICTIMSELF		= 0x04,
+			AIT_VICTIMNOTSELF	= 0x08
+		};
+		typedef struct AttackerInfo {
+			Unit*	attacker;		// reference to the attacker
+			Unit*	victim;			// combatant's current victim
+			float	threat;			// own threat on this combatant
+			float	threat2;		// highest threat not caused by bot
+			uint32  count;			// number of units attacking
+			uint32  source;			// 1=bot, 2=master, 3=group
+		};
+		typedef std::map<uint64,AttackerInfo> AttackerInfoList;
 
     public:
 	// ******* Stuff the outside world calls ****************************
@@ -85,7 +105,7 @@ class MANGOS_DLL_SPEC PlayerbotAI {
 
 		// finds spell ID for matching substring args
         // in priority of full text match, spells not taking reagents, and highest rank
-		uint32 getSpellId(const char* args) const;
+		uint32 getSpellId(const char* args, bool master = false) const;
 
         // extracts item ids from links
         void extractItemIds(const std::string& text, std::list<uint32>& itemIds) const;
@@ -154,6 +174,10 @@ class MANGOS_DLL_SPEC PlayerbotAI {
 
 		void AcceptQuest( Quest const *qInfo, Player *pGiver );
 
+		bool IsInCombat();
+		void UpdateAttackerInfo();
+		Unit* FindAttacker( ATTACKERINFOTYPE ait=AIT_NONE );
+
     private:
 		// ****** Closed Actions ********************************
 		// These actions may only be called at special times.
@@ -195,6 +219,8 @@ class MANGOS_DLL_SPEC PlayerbotAI {
 		// can do it
 		uint32 m_spellIdCommand;
 		uint64 m_targetGuidCommand;
+
+		AttackerInfoList m_attackerInfo;
 };
 
 #endif

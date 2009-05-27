@@ -115,26 +115,26 @@ void PlayerbotPriestAI::DoNextCombatManeuver(Unit *pTarget){
 
 	ai->Follow(*GetMaster()); // dont want to melee mob
 
-	// Heal myself
+	Player *m_bot = GetPlayerBot();
+	Group *m_group = m_bot->GetGroup();
 
-	if (ai->GetHealthPercent() < 15 && FADE > 0 && !GetPlayerBot()->HasAura(FADE, 0)) {
+	// Heal myself
+	if (ai->GetHealthPercent() < 15 && FADE > 0 && !m_bot->HasAura(FADE, 0)) {
 		GetAI()->TellMaster("I'm casting fade");
 		ai->CastSpell(FADE);
-		
+
 	}
-	else if (ai->GetHealthPercent() < 25 && PWS > 0 && !GetPlayerBot()->HasAura(PWS, 0)) {
+	else if (ai->GetHealthPercent() < 25 && PWS > 0 && !m_bot->HasAura(PWS, 0)) {
 		GetAI()->TellMaster("I'm casting pws on myself.");
 		ai->CastSpell(PWS);
 		
 	}
 	else if (ai->GetHealthPercent() < 80) {
-		HealTarget (*GetPlayerBot(), ai->GetHealthPercent());
+		HealTarget (*m_bot, ai->GetHealthPercent());
 	}
 
 	// Heal master
-
 	uint32 masterHP = GetMaster()->GetHealth()*100 / GetMaster()->GetMaxHealth();
-
 	if (GetMaster()->isAlive()) {
 		if (masterHP < 25 && PWS > 0 && !GetMaster()->HasAura(PWS, 0)) {
 				ai->CastSpell(PWS, *(GetMaster()));
@@ -144,8 +144,19 @@ void PlayerbotPriestAI::DoNextCombatManeuver(Unit *pTarget){
 		}
 	}
 
+	// Heal group
+	if( m_group ) {
+		Group::MemberSlotList const& groupSlot = m_group->GetMemberSlots();
+		for (Group::member_citerator itr = groupSlot.begin(); itr != groupSlot.end(); itr++) {
+			Player *m_groupMember = objmgr.GetPlayer( itr->guid );
+			if( !m_groupMember || !m_groupMember->isAlive() ) continue;
+			uint32 memberHP = m_groupMember->GetHealth()*100 / m_groupMember->GetMaxHealth();
+			if( memberHP < 25 )
+				HealTarget( *m_groupMember, memberHP );
+		}
+	}
+
 	// Damage Spells
-	Player *m_bot = GetPlayerBot();
 	if( !m_bot->HasInArc(M_PI, pTarget)) {
 	    m_bot->SetInFront(pTarget);
 	}
@@ -201,13 +212,12 @@ void PlayerbotPriestAI::DoNextCombatManeuver(Unit *pTarget){
 			
 		
 		case SPELL_SHADOWMAGIC:
-			if (PAIN > 0 && LastSpellShadowMagic <1 && ai->GetManaPercent() >= 60) {
-						GetAI()->TellMaster("I'm casting pain");
-						ai->CastSpell(PAIN, *pTarget);
-						
-						SpellSequence = SPELL_DISCIPLINE;
-						(LastSpellShadowMagic = LastSpellShadowMagic +1);
-				break;
+				if (PAIN > 0 && LastSpellShadowMagic <1 && ai->GetManaPercent() >= 60) {
+					GetAI()->TellMaster("I'm casting pain");
+					ai->CastSpell(PAIN, *pTarget);
+					SpellSequence = SPELL_DISCIPLINE;
+					(LastSpellShadowMagic = LastSpellShadowMagic +1);
+					break;
 				  }
 				else if (MIND_BLAST > 0 && LastSpellShadowMagic <2 && ai->GetManaPercent() >= 60) {
 						GetAI()->TellMaster("I'm casting mind blast");
@@ -217,7 +227,7 @@ void PlayerbotPriestAI::DoNextCombatManeuver(Unit *pTarget){
 						(LastSpellShadowMagic = LastSpellShadowMagic +1);
 						break;
 				  }
-				else if (SCREAM > 0 && LastSpellShadowMagic <3 && ai->GetManaPercent() >= 60) {
+/*				else if (SCREAM > 0 && LastSpellShadowMagic <3 && ai->GetManaPercent() >= 60) {
 						GetAI()->TellMaster("I'm casting scream.");
 						ai->CastSpell(SCREAM);
 						
@@ -225,6 +235,7 @@ void PlayerbotPriestAI::DoNextCombatManeuver(Unit *pTarget){
 						(LastSpellShadowMagic = LastSpellShadowMagic +1);
 						break;
 				  }
+*/
 				else if (MIND_FLAY > 0 && LastSpellShadowMagic <4 && ai->GetManaPercent() >= 60) {
 						GetAI()->TellMaster("I'm casting mind flay.");
 						ai->CastSpell(MIND_FLAY, *pTarget);
@@ -371,35 +382,28 @@ void PlayerbotPriestAI::DoNonCombatActions(){
 
 	//(!GetMaster()->HasAura(FORTITUDE,0) && GetAI()->CastSpell (FORTITUDE, *(GetMaster())) );
 
-
-
-
-
-
 	// buff and heal master's group
 	if (GetMaster()->GetGroup()) {
-	Group::MemberSlotList const& groupSlot = GetMaster()->GetGroup()->GetMemberSlots();
-	for (Group::member_citerator itr = groupSlot.begin(); itr != groupSlot.end(); itr++) {
-		Player *tPlayer = objmgr.GetPlayer(uint64 (itr->guid));
-		if( !tPlayer ) continue;
+		Group::MemberSlotList const& groupSlot = GetMaster()->GetGroup()->GetMemberSlots();
+		for (Group::member_citerator itr = groupSlot.begin(); itr != groupSlot.end(); itr++) {
+			Player *tPlayer = objmgr.GetPlayer(uint64 (itr->guid));
+			if( !tPlayer ) continue;
 		
-		// first rezz em
-		if (tPlayer->isDead()) {
-			std::string msg = "rezzing ";
-			msg += tPlayer->GetName();
-			GetPlayerBot()->Say(msg, LANG_UNIVERSAL);
-			GetAI()->CastSpell(REZZ, *tPlayer);
-			// rez is only 10 sec, but give time for lag
-			GetAI()->SetIgnoreUpdateTime(17);
-		} else {
-			// buff and heal
-			(!tPlayer->HasAura(FORTITUDE,0) && GetAI()->CastSpell (FORTITUDE, *tPlayer));
-			(HealTarget(*tPlayer, tPlayer->GetHealth()*100 / tPlayer->GetMaxHealth()));
+			// first rezz em
+			if ( !tPlayer->isAlive() && !tPlayer->IsPlayerbot() ) {
+				std::string msg = "rezzing ";
+				msg += tPlayer->GetName();
+				GetPlayerBot()->Say(msg, LANG_UNIVERSAL);
+				GetAI()->CastSpell(REZZ, *tPlayer);
+				// rez is only 10 sec, but give time for lag
+				GetAI()->SetIgnoreUpdateTime(17);
+			} else if( tPlayer->isAlive() ) {
+				// buff and heal
+				(!tPlayer->HasAura(FORTITUDE,0) && GetAI()->CastSpell (FORTITUDE, *tPlayer));
+				(HealTarget(*tPlayer, tPlayer->GetHealth()*100 / tPlayer->GetMaxHealth()));
+			}
 		}
 	}
-	}
-
-
 } // end DoNonCombatActions
 
 void PlayerbotPriestAI::BuffPlayer(Player* target) {

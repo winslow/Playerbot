@@ -128,7 +128,7 @@ PlayerbotAI::~PlayerbotAI() {
 
 // finds spell ID for matching substring args
 // in priority of full text match, spells not taking reagents, and highest rank
-uint32 PlayerbotAI::getSpellId(const char* args) const {
+uint32 PlayerbotAI::getSpellId(const char* args, bool master) const {
 	if (!*args)
 		return 0;
 
@@ -141,7 +141,11 @@ uint32 PlayerbotAI::getSpellId(const char* args) const {
 	// converting string that we try to find to lower case
 	wstrToLower(wnamepart);
 
-	int loc = m_master->GetSession()->GetSessionDbcLocale();
+	int loc = 0;
+	if (master)
+		loc = m_master->GetSession()->GetSessionDbcLocale();
+	else
+		loc = m_bot->GetSession()->GetSessionDbcLocale();
 
 	uint32 foundSpellId = 0;
 	bool foundExactMatch = false;
@@ -1125,7 +1129,11 @@ void PlayerbotAI::GetCombatOrders() {
 		m_lootCurrent = 0;
 	}
 
-	Unit* thingToAttack = m_master->getAttackerForHelper();
+	// update attacker info now
+	UpdateAttackerInfo();
+
+	//Unit* thingToAttack = m_master->getAttackerForHelper();
+	Unit *thingToAttack = FindAttacker();
 	if (!thingToAttack)
 		return;
 
@@ -1195,6 +1203,9 @@ void PlayerbotAI::DoNextCombatManeuver() {
 		return;
 	}
 
+	// update attacker info now
+	UpdateAttackerInfo();
+
 	if (GetClassAI())
 		(GetClassAI())->DoNextCombatManeuver(pTarget);
 }
@@ -1238,15 +1249,14 @@ void PlayerbotAI::DoLoot() {
 	if( !m_lootCurrent ) {
 		m_lootCurrent = m_lootCreature.front();
 		m_lootCreature.pop_front();
-		WorldLocation loc;
 		Creature *c = m_bot->GetMap()->GetCreature( m_lootCurrent );
-		if( !c ) { m_lootCurrent = 0; return; }
-		c->GetPosition( loc );
-		m_bot->GetMotionMaster()->MovePoint( loc.mapid, loc.x, loc.y, loc.z );
-		//sLog.outDebug( "[PlayerbotAI]: %s is going to loot '%s'", m_bot->GetName(), c->GetName() );
+		// check if we got a creature and if it is still a corpse, otherwise bot runs to spawn point
+		if( !c || c->getDeathState()!=CORPSE || m_master->GetDistance( c )>BOTLOOT_DISTANCE ) { m_lootCurrent = 0; return; }
+		m_bot->GetMotionMaster()->MovePoint( c->GetMapId(), c->GetPositionX(), c->GetPositionY(), c->GetPositionZ() );
+		//sLog.outDebug( "[PlayerbotAI]: %s is going to loot '%s' deathState=%d", m_bot->GetName(), c->GetName(), c->getDeathState() );
 	} else {
 		Creature *c = m_bot->GetMap()->GetCreature( m_lootCurrent );
-		if( !c ) { m_lootCurrent = 0; return; }
+		if( !c || c->getDeathState()!=CORPSE || m_master->GetDistance( c )>BOTLOOT_DISTANCE ) { m_lootCurrent = 0; return; }
 		if( m_bot->IsWithinDistInMap( c, INTERACTION_DISTANCE ) ) {
 			// check for needed items
 			m_bot->SendLoot( m_lootCurrent, LOOT_CORPSE );
@@ -1342,6 +1352,135 @@ void PlayerbotAI::AcceptQuest( Quest const *qInfo, Player *pGiver ) {
 		if( qInfo->GetSrcSpell() > 0 )
 			m_bot->CastSpell( m_bot, qInfo->GetSrcSpell(), true );
 	}
+}
+
+bool PlayerbotAI::IsInCombat() {
+	bool inCombat = false;
+	inCombat |= m_bot->isInCombat();
+	inCombat |= m_master->isInCombat();
+	if( m_bot->GetGroup() ) {
+		GroupReference *ref = m_bot->GetGroup()->GetFirstMember();
+		while( ref ) {
+			inCombat |= ref->getSource()->isInCombat();
+			ref = ref->next();
+		}
+	}
+	return inCombat;
+}
+
+void PlayerbotAI::UpdateAttackerInfo() {
+	// clear old list
+	m_attackerInfo.clear();
+
+	// check own attackers
+	HostilReference *ref = m_bot->getHostilRefManager().getFirst();
+	while( ref ) {
+		ThreatManager *target = ref->getSource();
+		uint64 guid = target->getOwner()->GetGUID();
+		m_attackerInfo[guid].attacker = target->getOwner();
+		m_attackerInfo[guid].victim = target->getOwner()->getVictim();
+		m_attackerInfo[guid].threat = target->getThreat( m_bot );
+		m_attackerInfo[guid].count = 1;
+		m_attackerInfo[guid].source = 1;
+		ref = ref->next();
+	}
+
+	// check master's attackers
+	ref = m_master->getHostilRefManager().getFirst();
+	while( ref ) {
+		ThreatManager *target = ref->getSource();
+		uint64 guid = target->getOwner()->GetGUID();
+		if( m_attackerInfo.find( guid ) == m_attackerInfo.end() ) {
+			m_attackerInfo[guid].attacker = target->getOwner();
+			m_attackerInfo[guid].victim = target->getOwner()->getVictim();
+			m_attackerInfo[guid].count = 0;
+			m_attackerInfo[guid].source = 2;
+		}
+		m_attackerInfo[guid].threat = target->getThreat( m_bot );
+		m_attackerInfo[guid].count++;
+		ref = ref->next();
+	}
+
+	// check all group members now
+	if( m_bot->GetGroup() ) {
+		GroupReference *gref = m_bot->GetGroup()->GetFirstMember();
+		while( gref ) {
+			if( gref->getSource() == m_bot || gref->getSource() == m_master ) {
+				gref = gref->next();
+				continue;
+			}
+			ref = gref->getSource()->getHostilRefManager().getFirst();
+			while( ref ) {
+				ThreatManager *target = ref->getSource();
+				uint64 guid = target->getOwner()->GetGUID();
+				if( m_attackerInfo.find( guid ) == m_attackerInfo.end() ) {
+					m_attackerInfo[guid].attacker = target->getOwner();
+					m_attackerInfo[guid].victim = target->getOwner()->getVictim();
+					m_attackerInfo[guid].count = 0;
+					m_attackerInfo[guid].source = 3;
+				}
+				m_attackerInfo[guid].threat = target->getThreat( m_bot );
+				m_attackerInfo[guid].count++;
+				ref = ref->next();
+			}
+			gref = gref->next();
+		}
+	}
+
+	// get highest threat not caused by bot for every entry in AttackerInfoList...
+	for( AttackerInfoList::iterator itr=m_attackerInfo.begin(); itr!=m_attackerInfo.end(); ++itr ) {
+		if( !itr->second.attacker ) continue;
+		Unit *a = itr->second.attacker;
+		float t = 0.00;
+		std::list<HostilReference*>::const_iterator i=a->getThreatManager().getThreatList().begin();
+		for( ; i!=a->getThreatManager().getThreatList().end(); ++i ) {
+			if( (*i)->getThreat() > t && (*i)->getTarget() != m_bot )
+				t = (*i)->getThreat();
+		}
+		m_attackerInfo[itr->first].threat2 = t;
+	}
+
+	// DEBUG: output attacker info
+	//sLog.outBasic( "[PlayerbotAI]: %s m_attackerInfo = {", m_bot->GetName() );
+	//for( AttackerInfoList::iterator i=m_attackerInfo.begin(); i!=m_attackerInfo.end(); ++i )
+	//	sLog.outBasic( "[PlayerbotAI]:     [%016I64X] { %08X, %08X, %.2f, %.2f, %d, %d }", 
+	//		i->first, 
+	//		(i->second.attacker?i->second.attacker->GetGUIDLow():0), 
+	//		(i->second.victim?i->second.victim->GetGUIDLow():0), 
+	//		i->second.threat, 
+	//		i->second.threat2, 
+	//		i->second.count, 
+	//		i->second.source );
+	//sLog.outBasic( "[PlayerbotAI]: };" );
+}
+
+Unit *PlayerbotAI::FindAttacker( ATTACKERINFOTYPE ait ) {
+	// list empty? why are we here?
+	if( m_attackerInfo.empty() ) return 0;
+	
+	// not searching something specific - return first in list
+	if( !ait ) return (m_attackerInfo.begin())->second.attacker;
+
+	float t = ( (ait & AIT_HIGHESTTHREAT) ? 0.00 : 9999.00 );
+	Unit *a = 0;
+	AttackerInfoList::iterator itr = m_attackerInfo.begin();
+	for( ; itr != m_attackerInfo.end(); ++itr ) {
+		if( (ait & AIT_VICTIMSELF) && !(ait & AIT_VICTIMNOTSELF) && itr->second.victim != m_bot ) continue;
+		if( !(ait & AIT_VICTIMSELF) && (ait & AIT_VICTIMNOTSELF) && itr->second.victim == m_bot ) continue;
+		if( !(ait & (AIT_LOWESTTHREAT|AIT_HIGHESTTHREAT)) ) {
+			a = itr->second.attacker;
+			itr = m_attackerInfo.end();
+		} else {
+			if( (ait & AIT_HIGHESTTHREAT) && (itr->second.victim==m_bot) && itr->second.threat>t ) {
+				t = itr->second.threat;
+				a = itr->second.attacker;
+			} else if( (ait & AIT_LOWESTTHREAT) && (itr->second.victim==m_bot) && itr->second.threat<t ) {
+				t = itr->second.threat;
+				a = itr->second.attacker;
+			}
+		}
+	}
+	return a;
 }
 
 // some possible things to use in AI
@@ -1442,10 +1581,8 @@ void PlayerbotAI::UpdateAI(const uint32 p_time) {
 		else if (m_combatOrder != ORDERS_NONE)
 			DoNextCombatManeuver();
 
-		// if master is in combat and bot is not, automatically assist master
-		// NOTE: combat orders are also set via incoming packets to bot or outgoing packets from master
-		//	else if (m_master->isInCombat() && ! m_bot->isInCombat())
-		else if (m_master->isInCombat())
+		// check for combat and get combat orders
+		else if ( IsInCombat() )
 			GetCombatOrders();
 
 		// bot was in combat recently - loot now
@@ -1550,8 +1687,8 @@ bool PlayerbotAI::CastSpell(uint32 spellId) {
 		return false;
 
 	m_CurrentlyCastingSpellId = spellId;
-	// m_ignoreAIUpdatesUntilTime = time(0) + pSpell->GetCastTime() + 3;
-	m_ignoreAIUpdatesUntilTime = time(0) + 6;
+	m_ignoreAIUpdatesUntilTime = time(0) + (int32)((float)pSpell->GetCastTime()/1000.0f) + 1;
+	//m_ignoreAIUpdatesUntilTime = time(0) + 6;
 
 	// if this caused the caster to move (blink) update the position
 	// I think this is normally done on the client
@@ -1881,7 +2018,7 @@ void PlayerbotAI::HandleCommand(const std::string& text, Player& fromPlayer) {
 
 		// try and get spell ID by name
 		if (spellId == 0)
-			spellId = getSpellId(spellStr.c_str());
+			spellId = getSpellId(spellStr.c_str(), true);
 
 		uint64 castOnGuid = fromPlayer.GetSelection();
 		if (spellId != 0 && castOnGuid != 0) {
