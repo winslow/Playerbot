@@ -36,7 +36,7 @@ void PlayerbotDeathKnightAI::DoNextCombatManeuver(Unit *pTarget){
 	PlayerbotAI* ai = GetAI();
 	if (!ai) return;
 	switch (ai->GetScenarioType()) {
-		case SCENARIO_DUEL: 
+		case PlayerbotAI::SCENARIO_DUEL:
 
 			ai->CastSpell(PLAGUE_STRIKE);
 			return;
@@ -47,11 +47,11 @@ void PlayerbotDeathKnightAI::DoNextCombatManeuver(Unit *pTarget){
 	//ai->Follow(*GetMaster()); // dont want to melee mob
 
 	// DK Attcks: Unholy, Frost & Blood
-	
-  Player *m_bot = GetPlayerBot();
-	if( !m_bot->HasInArc(M_PI, pTarget)) {
-	    m_bot->SetInFront(pTarget);
-	}
+
+	// damage spells
+	ai->SetInFront( pTarget );
+	Player *m_bot = GetPlayerBot();
+
 	switch (SpellSequence) {
 	
 	  case SPELL_DK_UNHOLY:

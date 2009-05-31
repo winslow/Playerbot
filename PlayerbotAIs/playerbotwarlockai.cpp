@@ -41,7 +41,7 @@ void PlayerbotWarlockAI::DoNextCombatManeuver(Unit *pTarget){
 	PlayerbotAI* ai = GetAI();
 	if (!ai) return;
 	switch (ai->GetScenarioType()) {
-		case SCENARIO_DUEL:
+		case PlayerbotAI::SCENARIO_DUEL:
 
 			if (SHADOW_BOLT > 0) {
 				ai->CastSpell(SHADOW_BOLT);
@@ -54,11 +54,8 @@ void PlayerbotWarlockAI::DoNextCombatManeuver(Unit *pTarget){
 	ai->Follow(*GetMaster()); // dont want to melee mob
 
 	// Damage Spells
-
+	ai->SetInFront( pTarget );
 	Player *m_bot = GetPlayerBot();
-	if( !m_bot->HasInArc(M_PI, pTarget)) {
-	    m_bot->SetInFront(pTarget);
-	}
 
 	switch (SpellSequence) {
 	

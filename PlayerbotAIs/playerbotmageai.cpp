@@ -1,3 +1,4 @@
+
 #include "PlayerbotMageAI.h"
 
 class PlayerbotAI;
@@ -49,7 +50,7 @@ void PlayerbotMageAI::DoNextCombatManeuver(Unit *pTarget){
 	PlayerbotAI* ai = GetAI();
 	if (!ai) return;
 	switch (ai->GetScenarioType()) {
-		case SCENARIO_DUEL:
+		case PlayerbotAI::SCENARIO_DUEL:
 
 			if (FIREBALL > 0) {
 				ai->CastSpell(FIREBALL);
@@ -62,6 +63,8 @@ void PlayerbotMageAI::DoNextCombatManeuver(Unit *pTarget){
 	ai->Follow(*GetMaster()); // dont want to melee mob
 
 	// Damage Spells (primitive example)
+	ai->SetInFront( pTarget );
+	Player *m_bot = GetPlayerBot();
 
 	switch (SpellSequence) {
 		case SPELL_FROST:
@@ -364,3 +367,7 @@ void PlayerbotMageAI::DoNonCombatActions(){
 */
 
 } // end DoNonCombatActions
+
+void PlayerbotMageAI::BuffPlayer(Player* target) {
+	GetAI()->CastSpell(ARCANE_INTELLECT, *target);
+}

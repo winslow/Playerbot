@@ -1,52 +1,59 @@
-
+    /* 
+	Name	: PlayerbotWarriorAI.cpp
+    Complete: maybe around 37%
+    Author	: Natsukawa
+	Version : 0.39
+    */
 #include "PlayerbotWarriorAI.h"
 
 class PlayerbotAI;
 PlayerbotWarriorAI::PlayerbotWarriorAI(Player* const master, Player* const bot, PlayerbotAI* const ai): PlayerbotClassAI(master, bot, ai) {
 	
-	HEROIC_STRIKE = ai->getSpellId("heroic strike"); //ARMS
-	REND = ai->getSpellId("rend"); //ARMS
-	THUNDER_CLAP = ai->getSpellId("thunder clap");  //ARMS
-	HAMSTRING = ai->getSpellId("hamstring");  //ARMS
-	MOCKING_BLOW = ai->getSpellId("mocking blow");  //ARMS
-	RETALIATION = ai->getSpellId("retaliation");  //ARMS
-	SWEEPING_STRIKES = ai->getSpellId("sweeping strikes"); //ARMS
-	MORTAL_STRIKE = ai->getSpellId("mortal strike");  //ARMS
-	BLADESTORM = ai->getSpellId("bladestorm");  //ARMS
-	HEROIC_THROW = ai->getSpellId("heroic throw");  //ARMS
-	BLOODRAGE = ai->getSpellId("bloodrage"); //PROTECTION
-	DEFENSIVE_STANCE = ai->getSpellId("defensive stance"); //PROTECTION
-	SUNDER_ARMOR = ai->getSpellId("sunder armor"); //PROTECTION
-	TAUNT = ai->getSpellId("taunt"); //PROTECTION
-	SHIELD_BASH = ai->getSpellId("shield bash"); //PROTECTION
-	REVENGE = ai->getSpellId("revenge"); //PROTECTION
-	SHIELD_BLOCK = ai->getSpellId("shield block"); //PROTECTION
-	DISARM = ai->getSpellId("disarm"); //PROTECTION
-	SHIELD_WALL = ai->getSpellId("shield wall"); //PROTECTION
-	SHIELD_SLAM = ai->getSpellId("shield slam"); //PROTECTION
-	VIGILANCE = ai->getSpellId("vigilance"); //PROTECTION
-	DEVASTATE = ai->getSpellId("devastate"); //PROTECTION
-	SHOCKWAVE = ai->getSpellId("shockwave"); //PROTECTION
-	SPELL_REFLECTION = ai->getSpellId("spell reflection"); //PROTECTION
-	BATTLE_SHOUT = ai->getSpellId("battle shout"); //FURY
-	DEMORALIZING_SHOUT = ai->getSpellId("demoralizing shout"); //FURY
-	CLEAVE = ai->getSpellId("cleave"); //FURY
-	INTIMIDATING_SHOUT = ai->getSpellId("intimidating shout"); //FURY
-	EXECUTE = ai->getSpellId("execute"); //FURY
-	CHALLENGING_SHOUT = ai->getSpellId("challenging shout"); //FURY
-	SLAM = ai->getSpellId("slam"); //FURY
-	BERSERKER_STANCE = ai->getSpellId("berserker stance"); //FURY
-	INTERCEPT = ai->getSpellId("intercept"); //FURY
-	DEATH_WISH = ai->getSpellId("death wish");//FURY
-	BERSERKER_RAGE = ai->getSpellId("berserker rage");//FURY
-	WHIRLWIND = ai->getSpellId("whirlwind");//FURY
-	PUMMEL = ai->getSpellId("pummel"); //FURY
-	BLOODTHIRST = ai->getSpellId("bloodthirst"); //FURY
-	RECKLESSNESS = ai->getSpellId("recklessness"); //FURY
-	RAMPAGE = ai->getSpellId("rampage"); //FURY
-	HEROIC_FURY = ai->getSpellId("heroic fury"); //FURY
-	COMMANDING_SHOUT = ai->getSpellId("commanding shout"); //FURY
-	ENRAGED_REGENERATION = ai->getSpellId("enraged regeneration"); //FURY
+	HEROIC_STRIKE			= ai->getSpellId("heroic strike"); //ARMS
+	REND					= ai->getSpellId("rend"); //ARMS
+	THUNDER_CLAP			= ai->getSpellId("thunder clap");  //ARMS
+	HAMSTRING				= ai->getSpellId("hamstring");  //ARMS
+	MOCKING_BLOW			= ai->getSpellId("mocking blow");  //ARMS
+	RETALIATION				= ai->getSpellId("retaliation");  //ARMS
+	SWEEPING_STRIKES		= ai->getSpellId("sweeping strikes"); //ARMS
+	MORTAL_STRIKE			= ai->getSpellId("mortal strike");  //ARMS
+	BLADESTORM				= ai->getSpellId("bladestorm");  //ARMS
+	HEROIC_THROW			= ai->getSpellId("heroic throw");  //ARMS
+	BLOODRAGE				= ai->getSpellId("bloodrage"); //PROTECTION
+	DEFENSIVE_STANCE		= ai->getSpellId("defensive stance"); //PROTECTION
+	DEVASTATE				= ai->getSpellId("devastate");
+	SUNDER_ARMOR			= 7386; //ai->getSpellId("sunder armor"); //PROTECTION
+	TAUNT					= 355; //ai->getSpellId("taunt"); //PROTECTION
+	SHIELD_BASH				= ai->getSpellId("shield bash"); //PROTECTION
+	REVENGE					= ai->getSpellId("revenge"); //PROTECTION
+	SHIELD_BLOCK			= ai->getSpellId("shield block"); //PROTECTION
+	DISARM					= ai->getSpellId("disarm"); //PROTECTION
+	SHIELD_WALL				= ai->getSpellId("shield wall"); //PROTECTION
+	SHIELD_SLAM				= ai->getSpellId("shield slam"); //PROTECTION
+	VIGILANCE				= ai->getSpellId("vigilance"); //PROTECTION
+	DEVASTATE				= ai->getSpellId("devastate"); //PROTECTION
+	SHOCKWAVE				= ai->getSpellId("shockwave"); //PROTECTION
+	CONCUSSION_BLOW			= ai->getSpellId("concussion blow");
+	SPELL_REFLECTION		= ai->getSpellId("spell reflection"); //PROTECTION
+	BATTLE_SHOUT			= ai->getSpellId("battle shout"); //FURY
+	DEMORALIZING_SHOUT		= ai->getSpellId("demoralizing shout"); //11556; //
+	CLEAVE					= ai->getSpellId("cleave"); //FURY
+	INTIMIDATING_SHOUT		= ai->getSpellId("intimidating shout"); //FURY
+	EXECUTE					= ai->getSpellId("execute"); //FURY
+	CHALLENGING_SHOUT		= ai->getSpellId("challenging shout"); //FURY
+	SLAM					= ai->getSpellId("slam"); //FURY
+	BERSERKER_STANCE		= ai->getSpellId("berserker stance"); //FURY
+	INTERCEPT				= ai->getSpellId("intercept"); //FURY
+	DEATH_WISH				= ai->getSpellId("death wish");//FURY
+	BERSERKER_RAGE			= ai->getSpellId("berserker rage");//FURY
+	WHIRLWIND				= ai->getSpellId("whirlwind");//FURY
+	PUMMEL					= ai->getSpellId("pummel"); //FURY
+	BLOODTHIRST				= ai->getSpellId("bloodthirst"); //FURY
+	RECKLESSNESS			= ai->getSpellId("recklessness"); //FURY
+	RAMPAGE					= ai->getSpellId("rampage"); //FURY
+	HEROIC_FURY				= ai->getSpellId("heroic fury"); //FURY
+	COMMANDING_SHOUT		= ai->getSpellId("commanding shout"); //FURY
+	ENRAGED_REGENERATION	= ai->getSpellId("enraged regeneration"); //FURY
 }
 PlayerbotWarriorAI::~PlayerbotWarriorAI() {}
 
@@ -54,320 +61,179 @@ void PlayerbotWarriorAI::DoNextCombatManeuver(Unit *pTarget){
 	PlayerbotAI* ai = GetAI();
 	if (!ai) return;
 	switch (ai->GetScenarioType()) {
-		case SCENARIO_DUEL:
+		case PlayerbotAI::SCENARIO_DUEL:
 
 			if (HEROIC_STRIKE > 0) {
 				ai->CastSpell(HEROIC_STRIKE);
 			}
 			return;
 	}
-
 	// ------- Non Duel combat ----------
 
 	//ai->Follow(*GetMaster()); // dont want to melee mob
 
 	// Damage Attacks
 	
-  Player *m_bot = GetPlayerBot();
+	Player *m_bot = GetPlayerBot();
 	if( !m_bot->HasInArc(M_PI, pTarget)) {
 	    m_bot->SetInFront(pTarget);
 	}
+	if (SHIELD_WALL > 0 && ai->GetHealthPercent() < 20) {
+		GetAI()->CastSpell (SHIELD_WALL, *m_bot);
+	}
+	if (DEVASTATE > 0 && ai->GetRageAmount() >= 15) {
+		GetAI()->CastSpell (DEVASTATE);
+	}
+	else if (SUNDER_ARMOR > 0 && ai->GetRageAmount() >= 15) {
+		GetAI()->CastSpell (SUNDER_ARMOR);
+	}
+	if (pTarget->IsNonMeleeSpellCasted(true)) {
+		SpellSequence = SpellPreventing;
+	}
+	if (pTarget->GetHealth() < pTarget->GetMaxHealth()*0.2 && pTarget->getLevel() <= m_bot->getLevel() ) {
+		SpellSequence = Berserker;
+	}
+	else {
+		SpellSequence = Tanking;
+	}
+
 	switch (SpellSequence) {
-	
-	  case SPELL_PROTECTION:
-			if (DEFENSIVE_STANCE > 0 && LastSpellProtection < 1) {
-			
-						ai->CastSpell(DEFENSIVE_STANCE);
-						SpellSequence = SPELL_FURY;
-						(LastSpellProtection = LastSpellProtection +1);
-				break;
-				
+		case Tanking:
+			//GetAI()->TellMaster("Tanking");
+			if (DEFENSIVE_STANCE > 0 && !m_bot->HasAura(DEFENSIVE_STANCE, 0)) {
+				GetAI()->CastSpell (DEFENSIVE_STANCE);
 			}
-			  else	if (SUNDER_ARMOR > 0 && LastSpellProtection < 2 && ai->GetRageAmount() >= 15) {
-						
-						ai->CastSpell(SUNDER_ARMOR, *pTarget);
-						SpellSequence = SPELL_FURY;
-						(LastSpellProtection = LastSpellProtection +1);
-						break;
-				  }
-			  else if (TAUNT > 0 && LastSpellProtection < 3) {
-						
-						ai->CastSpell(TAUNT, *pTarget);
-						SpellSequence = SPELL_FURY;
-						(LastSpellProtection = LastSpellProtection +1);
-						break;
-				  }
-				else if (SHIELD_BASH > 0 && LastSpellProtection < 5 && ai->GetRageAmount() >= 10) {
-						
-						ai->CastSpell(SHIELD_BASH, *pTarget);
-						SpellSequence = SPELL_FURY;
-						(LastSpellProtection = LastSpellProtection +1);
-						break;
-				  }
-				else if (REVENGE > 0 && LastSpellProtection < 6 && ai->GetRageAmount() >= 5) {
-						
-						ai->CastSpell(REVENGE, *pTarget);
-						SpellSequence = SPELL_FURY;
-						(LastSpellProtection = LastSpellProtection +1);
-						break;
-				  }
-				else if (SHIELD_BLOCK > 0 && LastSpellProtection < 7) {
-						
-						ai->CastSpell(SHIELD_BLOCK);
-						SpellSequence = SPELL_FURY;
-						(LastSpellProtection = LastSpellProtection +1);
-						break;
-				  }
-				else if (DISARM > 0 && LastSpellProtection < 8 && ai->GetRageAmount() >= 15) {
-						
-						ai->CastSpell(DISARM, *pTarget);
-						SpellSequence = SPELL_FURY;
-						(LastSpellProtection = LastSpellProtection +1);
-						break;
-				  }
-				else if (SHIELD_WALL > 0 && LastSpellProtection < 9) {
-						
-						ai->CastSpell(SHIELD_WALL);
-						SpellSequence = SPELL_FURY;
-						(LastSpellProtection = LastSpellProtection +1);
-						break;
-				  }
-				else if (SHIELD_SLAM > 0 && LastSpellProtection < 10 && ai->GetRageAmount() >= 20) {
-						
-						ai->CastSpell(SHIELD_SLAM, *pTarget);
-						SpellSequence = SPELL_FURY;
-						(LastSpellProtection = LastSpellProtection +1);
-						break;
-				  }
-				else if (VIGILANCE > 0 && LastSpellProtection < 11) {
-						
-						ai->CastSpell(VIGILANCE, *pTarget);
-						SpellSequence = SPELL_FURY;
-						(LastSpellProtection = LastSpellProtection +1);
-						break;
-				  }
-				else if (DEVASTATE > 0 && LastSpellProtection < 12 && ai->GetRageAmount() >= 15) {
-						
-						ai->CastSpell(DEVASTATE, *pTarget);
-						SpellSequence = SPELL_FURY;
-						(LastSpellProtection = LastSpellProtection +1);
-						break;
-				  }
-				else if (SHOCKWAVE > 0 && LastSpellProtection < 13 && ai->GetRageAmount() >= 15) {
-						
-						ai->CastSpell(SHOCKWAVE);
-						SpellSequence = SPELL_FURY;
-						(LastSpellProtection = LastSpellProtection +1);
-						break;
-				  }
-				else if (SPELL_REFLECTION > 0 && LastSpellProtection < 14 && ai->GetRageAmount() >= 15) {
-						
-						ai->CastSpell(SPELL_REFLECTION);
-						SpellSequence = SPELL_FURY;
-						(LastSpellProtection = LastSpellProtection +1);
-						break;
-				  }
-				
-
-					LastSpellProtection = 0;
-					//SpellSequence = SPELL_FURY;
-				//break;
-				
-			
-		
-		case SPELL_FURY:
-			if (DEMORALIZING_SHOUT > 0 && LastSpellFury < 1 && ai->GetRageAmount() >= 10) {
-						ai->CastSpell(DEMORALIZING_SHOUT);
-						SpellSequence = SPELL_ARMS;
-						(LastSpellFury = LastSpellFury +1);
-				break;
-				  }
-				else if (CLEAVE > 0 && LastSpellFury < 2 && ai->GetRageAmount() >= 20) {
-						ai->CastSpell(CLEAVE, *pTarget);
-						SpellSequence = SPELL_ARMS;
-						(LastSpellFury = LastSpellFury +1);
-						break;
-				  }
-				
-				else if (INTIMIDATING_SHOUT > 0 && LastSpellFury < 4 && ai->GetRageAmount() >= 25) {
-						ai->CastSpell(INTIMIDATING_SHOUT, *pTarget);
-						SpellSequence = SPELL_ARMS;
-						(LastSpellFury = LastSpellFury +1);
-						break;
-				  }
-				else if (EXECUTE > 0 && LastSpellFury < 5 && ai->GetRageAmount() >= 15) {
-						ai->CastSpell(EXECUTE, *pTarget);
-						SpellSequence = SPELL_ARMS;
-						(LastSpellFury = LastSpellFury +1);
-						break;
-				  }
-				else if (CHALLENGING_SHOUT > 0 && LastSpellFury < 6 && ai->GetRageAmount() >= 5) {
-						ai->CastSpell(CHALLENGING_SHOUT);
-						SpellSequence = SPELL_ARMS;
-						(LastSpellFury = LastSpellFury +1);
-						break;
-				  }
-				else if (SLAM > 0 && LastSpellFury < 7 && ai->GetRageAmount() >= 15) {
-						ai->CastSpell(SLAM, *pTarget);
-						SpellSequence = SPELL_ARMS;
-						(LastSpellFury = LastSpellFury +1);
-						break;
-				  }
-				/*
-				else if (BERSERKER_STANCE > 0 && LastSpellFury < 8) {
-						ai->CastSpell(BERSERKER_STANCE, *pTarget);
-						SpellSequence = SPELL_ARMS;
-						(LastSpellFury = LastSpellFury +1);
-						break;
-				  }
-				*/
-				else if (INTERCEPT > 0 && LastSpellFury < 9 && ai->GetRageAmount() >= 10) {
-						ai->CastSpell(INTERCEPT, *pTarget);
-						SpellSequence = SPELL_ARMS;
-						(LastSpellFury = LastSpellFury +1);
-						break;
-				  }
-				else if (DEATH_WISH > 0 && LastSpellFury < 10 && ai->GetRageAmount() >= 10) {
-						ai->CastSpell(DEATH_WISH);
-						SpellSequence = SPELL_ARMS;
-						(LastSpellFury = LastSpellFury +1);
-						break;
-				  }
-				else if (BERSERKER_RAGE > 0 && LastSpellFury < 11) {
-						ai->CastSpell(BERSERKER_RAGE);
-						SpellSequence = SPELL_ARMS;
-						(LastSpellFury = LastSpellFury +1);
-						break;
-				  }
-				else if (WHIRLWIND > 0 && LastSpellFury < 12 && ai->GetRageAmount() >= 25) {
-						ai->CastSpell(WHIRLWIND);
-						SpellSequence = SPELL_ARMS;
-						(LastSpellFury = LastSpellFury +1);
-						break;
-				  }
-				else if (PUMMEL > 0 && LastSpellFury < 12 && ai->GetRageAmount() >= 10) {
-						ai->CastSpell(PUMMEL, *pTarget);
-						SpellSequence = SPELL_ARMS;
-						(LastSpellFury = LastSpellFury +1);
-						break;
-				  }
-				else if (BLOODTHIRST > 0 && LastSpellFury < 12 && ai->GetRageAmount() >= 30) {
-						ai->CastSpell(BLOODTHIRST, *pTarget);
-						SpellSequence = SPELL_ARMS;
-						(LastSpellFury = LastSpellFury +1);
-						break;
-				  }
-				else if (RECKLESSNESS > 0 && LastSpellFury < 12) {
-						ai->CastSpell(RECKLESSNESS);
-						SpellSequence = SPELL_ARMS;
-						(LastSpellFury = LastSpellFury +1);
-						break;
-				  }
-				else if (RAMPAGE > 0 && LastSpellFury < 12) {
-						ai->CastSpell(RAMPAGE);
-						SpellSequence = SPELL_ARMS;
-						(LastSpellFury = LastSpellFury +1);
-						break;
-				  }
-				else if (HEROIC_FURY > 0 && LastSpellFury < 12) {
-						ai->CastSpell(HEROIC_FURY);
-						SpellSequence = SPELL_ARMS;
-						(LastSpellFury = LastSpellFury +1);
-						break;
-				  }
-				else if (COMMANDING_SHOUT > 0 && LastSpellFury < 12 && ai->GetRageAmount() >= 10) {
-						ai->CastSpell(COMMANDING_SHOUT);
-						SpellSequence = SPELL_ARMS;
-						(LastSpellFury = LastSpellFury +1);
-						break;
-				  }
-				else if (ENRAGED_REGENERATION > 0 && LastSpellFury < 12 && ai->GetRageAmount() >= 15) {
-						ai->CastSpell(ENRAGED_REGENERATION);
-						SpellSequence = SPELL_ARMS;
-						(LastSpellFury = LastSpellFury +1);
-						break;
-				  }
-
-				LastSpellFury = 0;
-				//SpellSequence = SPELL_ARMS;
-				//break;
-				
-			
-
-		  case SPELL_ARMS:
-			if (HEROIC_STRIKE > 0 && LastSpellArms < 1 && ai->GetRageAmount() >= 15) {
-				ai->CastSpell(HEROIC_STRIKE, *pTarget);
-				SpellSequence = SPELL_PROTECTION;
-				(LastSpellArms = LastSpellArms + 1);
+			if (DEMORALIZING_SHOUT > 0 && !pTarget->HasAura(DEMORALIZING_SHOUT, 0) && ai->GetRageAmount() >= 10) {
+				GetAI()->CastSpell (DEMORALIZING_SHOUT);
+			}
+			else if (SHIELD_BLOCK > 0 && TankCounter < 1 && pTarget->getVictim() == m_bot) {
+				GetAI()->CastSpell (SHIELD_BLOCK);
+				TankCounter++;
 				break;
 			}
-			else if (REND > 0 && LastSpellArms < 2 && ai->GetRageAmount() >= 10 && !ai->HasAura(REND, *pTarget)) {
-				ai->CastSpell(REND, *pTarget);
-				SpellSequence = SPELL_PROTECTION;
-				(LastSpellArms = LastSpellArms + 1);
+			else if (SHIELD_SLAM > 0 && TankCounter < 2 && ai->GetRageAmount() >= 20) {
+				GetAI()->CastSpell (SHIELD_SLAM, *pTarget);
+				TankCounter++;
 				break;
 			}
-			else if (THUNDER_CLAP > 0 && LastSpellArms < 3 && ai->GetRageAmount() >= 20) {
-				ai->CastSpell(THUNDER_CLAP, *pTarget);
-				SpellSequence = SPELL_PROTECTION;
-				(LastSpellArms = LastSpellArms + 1);
+			else if (CONCUSSION_BLOW > 0 && TankCounter < 3 && ai->GetRageAmount() >= 20) {
+				GetAI()->CastSpell (CONCUSSION_BLOW, *pTarget);
+				TankCounter++;
 				break;
 			}
-			else if (HAMSTRING > 0 && LastSpellArms < 4 && ai->GetRageAmount() >= 15 && !ai->HasAura(HAMSTRING, *pTarget)) {
-				ai->CastSpell(HAMSTRING, *pTarget);
-				SpellSequence = SPELL_PROTECTION;
-				(LastSpellArms = LastSpellArms + 1);
+			else if (SHOCKWAVE > 0 && TankCounter < 4 && ai->GetRageAmount() >= 15) {
+				GetAI()->CastSpell (SHOCKWAVE);
+				TankCounter++;
 				break;
 			}
-			else if (MOCKING_BLOW > 0 && LastSpellArms < 5 && ai->GetRageAmount() >= 10) {
-				ai->CastSpell(MOCKING_BLOW, *pTarget);
-				SpellSequence = SPELL_PROTECTION;
-				(LastSpellArms = LastSpellArms + 1);
+			else if (REVENGE > 0 && TankCounter < 5 && ai->GetRageAmount() >= 5) {
+				GetAI()->CastSpell (REVENGE, *pTarget);
+				TankCounter++;
 				break;
 			}
-			else if (RETALIATION > 0 && LastSpellArms < 6) {
-				ai->CastSpell(RETALIATION, *pTarget);
-				SpellSequence = SPELL_PROTECTION;
-				(LastSpellArms = LastSpellArms + 1);
+			else if (THUNDER_CLAP > 0 && TankCounter < 6 && ai->GetRageAmount() >= 5) {
+				GetAI()->CastSpell (THUNDER_CLAP, *pTarget);
+				TankCounter++;
 				break;
 			}
-			else if (SWEEPING_STRIKES > 0 && LastSpellArms < 7 && ai->GetRageAmount() >= 30) {
-				ai->CastSpell(SWEEPING_STRIKES);
-				SpellSequence = SPELL_PROTECTION;
-				(LastSpellArms = LastSpellArms + 1);
+			else if (SHIELD_BLOCK > 0 && TankCounter < 7 && pTarget->getVictim() == m_bot) {
+				GetAI()->CastSpell (SHIELD_BLOCK);
+				TankCounter++;
 				break;
 			}
-			else if (MORTAL_STRIKE > 0 && LastSpellArms < 8 && ai->GetRageAmount() >= 30) {
-				ai->CastSpell(MORTAL_STRIKE, *pTarget);
-				SpellSequence = SPELL_PROTECTION;
-				(LastSpellArms = LastSpellArms + 1);
+			else if (HEROIC_STRIKE > 0 && TankCounter < 8 && ai->GetRageAmount() >= 15) {
+				GetAI()->CastSpell (HEROIC_STRIKE, *pTarget);
+				TankCounter++;
+				break;
+			}
+			else if (TAUNT > 0 && TankCounter < 9) {
+				GetAI()->CastSpell (TAUNT, *pTarget);
+				TankCounter++;
+				break;
+			}
+			else if (COMMANDING_SHOUT > 0 && TankCounter < 10 && !m_bot->HasAura(COMMANDING_SHOUT, 0) && ai->GetRageAmount() >= 10) {
+				GetAI()->CastSpell (COMMANDING_SHOUT);
+				TankCounter++;
+				break;
+			}
+			else if (TankCounter < 11) {
+				TankCounter = 0;
+				//GetAI()->TellMaster("TankCounterReseter");
 				break;
 			}
 			else {
-				LastSpellArms = 0;
-				SpellSequence = SPELL_PROTECTION;
+				TankCounter = 0;
+				//GetAI()->TellMaster("TankCounterReseter");
+				break;
 			}
+			break;
+		case Berserker:
+			//GetAI()->TellMaster("Berserker");
+			if (BERSERKER_STANCE > 0 && !m_bot->HasAura(BERSERKER_STANCE, 0)) {
+				GetAI()->CastSpell (BERSERKER_STANCE);
+			}
+			else if (EXECUTE > 0 && BerserkerCounter < 1 && pTarget->GetHealth() < pTarget->GetMaxHealth()*0.2 && ai->GetRageAmount() >= 15) {
+				GetAI()->CastSpell (EXECUTE, *pTarget);
+				BerserkerCounter++;
+				break;
+			}
+			else if (WHIRLWIND > 0 && BerserkerCounter < 2 && ai->GetRageAmount() >= 15) {
+				GetAI()->CastSpell (WHIRLWIND, *pTarget);
+				BerserkerCounter++;
+				break;
+			}
+			else if (BerserkerCounter < 3) {
+				BerserkerCounter = 0;
+				//GetAI()->TellMaster("BerserkerCounterReseter");
+				break;
+			}
+			else {
+				BerserkerCounter = 0;
+				//GetAI()->TellMaster("BerserkerCounterReseter");
+				break;
+			}
+			break;
+		case SpellPreventing:
+			//GetAI()->TellMaster("Case SpellPreventing");
+			if (SPELL_REFLECTION > 0 && m_bot->HasAura(DEFENSIVE_STANCE, 0) && pTarget->getVictim() == m_bot && pTarget->IsNonMeleeSpellCasted(true) && ai->GetRageAmount() >= 15) {
+				GetAI()->CastSpell (SPELL_REFLECTION, *m_bot);
+				//GetAI()->TellMaster("SpellRef");
+			}
+			else if (PUMMEL > 0 && m_bot->HasAura(BERSERKER_STANCE, 0) && pTarget->IsNonMeleeSpellCasted(true) && ai->GetRageAmount() >= 10) {
+				GetAI()->CastSpell (PUMMEL, *pTarget);
+				//GetAI()->TellMaster("PUMMEL");
+			}
+			else {
+				GetAI()->CastSpell (SHIELD_BASH, *pTarget);
+				//GetAI()->TellMaster("SHBash");
+			}
+			break;
 	}
-
-} // end DoNextCombatManeuver
-
+}
+	
 void PlayerbotWarriorAI::DoNonCombatActions(){
 	Player * m_bot = GetPlayerBot();
 	if (!m_bot) {
 		return;
 	}
 
-	SpellSequence = SPELL_PROTECTION;
-	
-	
-  if (BATTLE_SHOUT > 0 && !m_bot->HasAura(BATTLE_SHOUT, 0)) {
-		if (BLOODRAGE > 0) {
-			GetAI()->CastSpell (BLOODRAGE, *m_bot);
-		}		
-	}
-
-	if (BATTLE_SHOUT > 0 && !m_bot->HasAura(BATTLE_SHOUT, 0)) {
-		GetAI()->CastSpell (BATTLE_SHOUT, *m_bot);
+	// TODO (by Runsttren): check if shout aura bot has is casted by this bot, 
+	// otherwise cast other useful shout
+	// If the bot is protect talented, she/he needs stamina not attack power.
+	// With stance change can the shout change to. 
+	// Inserted line to battle shout m_bot->HasAura( COMMANDING_SHOUT, 0 )
+	// Natsukawa
+	if( ( (COMMANDING_SHOUT>0 && !m_bot->HasAura( COMMANDING_SHOUT, 0 )) ||
+		(BATTLE_SHOUT>0 && !m_bot->HasAura( BATTLE_SHOUT, 0 )) ) && 
+		GetAI()->GetRageAmount()<10 && BLOODRAGE>0 && !m_bot->HasAura( BLOODRAGE, 0 ) ) {
+		// we do have a useful shout, no rage coming but can cast bloodrage... do it
+		GetAI()->CastSpell( BLOODRAGE, *m_bot );
+	} else if( COMMANDING_SHOUT>0 && !m_bot->HasAura( COMMANDING_SHOUT, 0 ) ) {
+		// use commanding shout now
+		GetAI()->CastSpell( COMMANDING_SHOUT, *m_bot );
+	} else if( BATTLE_SHOUT>0 && !m_bot->HasAura( BATTLE_SHOUT, 0 ) && !m_bot->HasAura( COMMANDING_SHOUT, 0 ) ) {
+		// use battle shout
+		GetAI()->CastSpell( BATTLE_SHOUT, *m_bot );
 	}
 
 	// hp check
