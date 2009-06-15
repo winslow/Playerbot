@@ -56,7 +56,7 @@ enum Gossip_Option
     GOSSIP_OPTION_ARMORER           = 15,                   //UNIT_NPC_FLAG_ARMORER           = 16384,
     GOSSIP_OPTION_UNLEARNTALENTS    = 16,                   //UNIT_NPC_FLAG_TRAINER (bonus option for GOSSIP_OPTION_TRAINER)
     GOSSIP_OPTION_UNLEARNPETSKILLS  = 17,                   //UNIT_NPC_FLAG_TRAINER (bonus option for GOSSIP_OPTION_TRAINER)
-	GOSSIP_OPTION_BOT				= 99					//UNUSED (just for bot system)
+    GOSSIP_OPTION_BOT               = 99                    //UNUSED (just for bot system)
 };
 
 enum Gossip_Guard
@@ -158,10 +158,10 @@ struct CreatureInfo
 {
     uint32  Entry;
     uint32  HeroicEntry;
-    uint32  DisplayID_A;
-    uint32  DisplayID_A2;
-    uint32  DisplayID_H;
-    uint32  DisplayID_H2;
+    uint32  unk1;
+    uint32  unk2;
+    uint32  DisplayID_A[2];
+    uint32  DisplayID_H[2];
     char*   Name;
     char*   SubName;
     char*   IconName;
@@ -217,6 +217,8 @@ struct CreatureInfo
     float   unk16;
     float   unk17;
     bool    RacialLeader;
+    uint32  questItems[4];
+    uint32  movementId;
     bool    RegenHealth;
     uint32  equipmentId;
     uint32  MechanicImmuneMask;
@@ -236,9 +238,13 @@ struct CreatureInfo
             return SKILL_SKINNING;                          // normal case
     }
 
-    bool isTameable() const
+    bool isTameable(bool exotic) const
     {
-        return type == CREATURE_TYPE_BEAST && family != 0 && (type_flags & CREATURE_TYPEFLAGS_TAMEABLE);
+        if(type != CREATURE_TYPE_BEAST || family == 0 || (type_flags & CREATURE_TYPEFLAGS_TAMEABLE)==0)
+            return false;
+
+        // if can tame exotic then can tame any temable
+        return exotic || (type_flags & CREATURE_TYPEFLAGS_EXOTIC)==0;
     }
 };
 
@@ -477,7 +483,7 @@ class MANGOS_DLL_SPEC Creature : public Unit
         bool isTotem() const { return m_isTotem; }
         bool isRacialLeader() const { return GetCreatureInfo()->RacialLeader; }
         bool isCivilian() const { return GetCreatureInfo()->flags_extra & CREATURE_FLAG_EXTRA_CIVILIAN; }
-		bool isBotGiver();
+        bool isBotGiver();
         bool canWalk() const { return GetCreatureInfo()->InhabitType & INHABIT_GROUND; }
         bool canSwim() const { return GetCreatureInfo()->InhabitType & INHABIT_WATER; }
         bool canFly()  const { return GetCreatureInfo()->InhabitType & INHABIT_AIR; }
@@ -565,7 +571,7 @@ class MANGOS_DLL_SPEC Creature : public Unit
         uint32 GetGossipTextId(uint32 action, uint32 zoneid);
         uint32 GetNpcTextId();
         void LoadGossipOptions();
-		void LoadBotMenu(Player *pPlayer);
+        void LoadBotMenu(Player *pPlayer);
         GossipOption const* GetGossipOption( uint32 id ) const;
         void addGossipOption(GossipOption const& gso) { m_goptions.push_back(gso); }
 
@@ -607,6 +613,7 @@ class MANGOS_DLL_SPEC Creature : public Unit
         float GetAttackDistance(Unit const* pl) const;
 
         void DoFleeToGetAssistance();
+        void CallForHelp(float fRadius);
         void CallAssistance();
         void SetNoCallAssistance(bool val) { m_AlreadyCallAssistance = val; }
         void SetNoSearchAssistance(bool val) { m_AlreadySearchedAssistance = val; }
