@@ -785,7 +785,7 @@ void PlayerbotAI::HandleBotOutgoingPacket(const WorldPacket& packet)
             return;
         }
 
-        // handle flying acknowledgement
+/*        // handle flying acknowledgement
         case SMSG_MOVE_SET_CAN_FLY:
         {
             WorldPacket p(packet);
@@ -808,6 +808,7 @@ void PlayerbotAI::HandleBotOutgoingPacket(const WorldPacket& packet)
             //m_bot->SetSpeed(MOVE_RUN,m_master->GetSpeedRate(MOVE_RUN),true);
             return;
         }
+        */
 
         // If the leader role was given to the bot automatically give it to the master
         // if the master is in the group, otherwise leave group
