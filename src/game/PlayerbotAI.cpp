@@ -785,14 +785,15 @@ void PlayerbotAI::HandleBotOutgoingPacket(const WorldPacket& packet)
             return;
         }
 
-/*        // handle flying acknowledgement
+        // handle flying acknowledgement
         case SMSG_MOVE_SET_CAN_FLY:
         {
             WorldPacket p(packet);
             uint64 guid = extractGuid(p);
             if (guid != m_bot->GetGUID())
                 return;
-            m_bot->AddUnitMovementFlag(MOVEMENTFLAG_FLYING2);
+            m_bot->m_movementInfo.AddMovementFlag(MOVEMENTFLAG_FLYING2);
+            //m_bot->AddUnitMovementFlag(MOVEMENTFLAG_FLYING2);
             //m_bot->SetSpeed(MOVE_RUN, m_master->GetSpeed(MOVE_FLIGHT) +0.1f, true);
             return;
         }
@@ -804,11 +805,12 @@ void PlayerbotAI::HandleBotOutgoingPacket(const WorldPacket& packet)
             uint64 guid = extractGuid(p);
             if (guid != m_bot->GetGUID())
                 return;
-            m_bot->RemoveUnitMovementFlag(MOVEMENTFLAG_FLYING2);
+            m_bot->m_movementInfo.RemoveMovementFlag(MOVEMENTFLAG_FLYING2);
+            //m_bot->RemoveUnitMovementFlag(MOVEMENTFLAG_FLYING2);
             //m_bot->SetSpeed(MOVE_RUN,m_master->GetSpeedRate(MOVE_RUN),true);
             return;
         }
-        */
+        
 
         // If the leader role was given to the bot automatically give it to the master
         // if the master is in the group, otherwise leave group
