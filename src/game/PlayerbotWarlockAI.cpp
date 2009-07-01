@@ -19,7 +19,7 @@ PlayerbotWarlockAI::PlayerbotWarlockAI(Player* const master, Player* const bot, 
 	CORRUPTION            = ai->getSpellId("corruption"); // AFFLICTION
 	DRAIN_SOUL            = ai->getSpellId("drain soul");
 	DRAIN_LIFE            = ai->getSpellId("drain life");
-    SIPHON_LIFE           = ai->getSpellId("siphon life");
+    LIFE_TAP              = ai->getSpellId("life tap");
     UNSTABLE_AFFLICTION   = ai->getSpellId("unstable affliction");
     HAUNT                 = ai->getSpellId("haunt");
     ATROCITY              = ai->getSpellId("atrocity");
@@ -60,7 +60,12 @@ void PlayerbotWarlockAI::DoNextCombatManeuver(Unit *pTarget)
     // ------- Non Duel combat ----------
 
     ai->Follow(*GetMaster()); // dont want to melee mob
-
+	// check for mana and life tap
+	if (ai->GetManaPercent() < 20)
+	{
+		GetAI()->TellMaster("I'm casting life tap");
+        ai->CastSpell(LIFE_TAP );
+	}
 	// check for soul link with demon
     Pet *pet = m_bot->GetPet();
     if(( pet )
@@ -148,35 +153,28 @@ void PlayerbotWarlockAI::DoNextCombatManeuver(Unit *pTarget)
                 LastSpellAffliction = LastSpellAffliction +1;
                 break;
             }
-            else if (SIPHON_LIFE > 0 && LastSpellAffliction < 4 && ai->GetManaPercent() >= 22)
-            {
-                ai->CastSpell(SIPHON_LIFE, *pTarget);
-                SpellSequence = SPELL_DESTRUCTION;
-                LastSpellAffliction = LastSpellAffliction +1;
-                break;
-            }
-            else if (UNSTABLE_AFFLICTION > 0 && LastSpellAffliction < 5 && ai->GetManaPercent() >= 20)
+            else if (UNSTABLE_AFFLICTION > 0 && LastSpellAffliction < 4 && ai->GetManaPercent() >= 20)
             {
                 ai->CastSpell(UNSTABLE_AFFLICTION, *pTarget);
                 SpellSequence = SPELL_DESTRUCTION;
                 LastSpellAffliction = LastSpellAffliction +1;
                 break;
             }
-            else if (HAUNT > 0 && LastSpellAffliction < 6 && ai->GetManaPercent() >= 12)
+            else if (HAUNT > 0 && LastSpellAffliction < 5 && ai->GetManaPercent() >= 12)
             {
                 ai->CastSpell(HAUNT, *pTarget);
                 SpellSequence = SPELL_DESTRUCTION;
                 LastSpellAffliction = LastSpellAffliction +1;
                 break;
             }
-            else if (ATROCITY > 0 && LastSpellAffliction < 7 && ai->GetManaPercent() >= 21)
+            else if (ATROCITY > 0 && LastSpellAffliction < 6 && ai->GetManaPercent() >= 21)
             {
                 ai->CastSpell(ATROCITY, *pTarget);
                 SpellSequence = SPELL_DESTRUCTION;
                 LastSpellAffliction = LastSpellAffliction +1;
                 break;
             }
-            else if (SEED_OF_CORRUPTION > 0 && LastSpellAffliction < 8 && ai->GetManaPercent() >= 34)
+            else if (SEED_OF_CORRUPTION > 0 && LastSpellAffliction < 7 && ai->GetManaPercent() >= 34)
             {
                 ai->CastSpell(SEED_OF_CORRUPTION, *pTarget);
                 SpellSequence = SPELL_DESTRUCTION;

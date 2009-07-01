@@ -65,18 +65,29 @@ PlayerbotShamanAI::~PlayerbotShamanAI() {}
 void PlayerbotShamanAI::HealTarget(Unit &target, uint8 hp)
 {
     PlayerbotAI* ai = GetAI();
-	Player *m_bot = GetPlayerBot();
 
     if (hp < 30 && HEALING_WAVE > 0 && ai->GetManaPercent() >= 32)
+	{
+        GetAI()->TellMaster("I'm casting healing wave.");//<---changed
         ai->CastSpell(HEALING_WAVE, target);
+	}
 	else if (hp < 45 && LESSER_HEALING_WAVE > 0 && ai->GetManaPercent() >= 19)
+	{
+        GetAI()->TellMaster("I'm casting lesser healing wave.");//<---changed
         ai->CastSpell(LESSER_HEALING_WAVE, target);
-	else if (hp < 55 && RIPTIDE > 0 && (!m_bot->HasAura(RIPTIDE, 0)) && ai->GetManaPercent() >= 21)
+	}
+	else if (hp < 55 && RIPTIDE > 0 && ai->GetManaPercent() >= 21)
+	{
+		GetAI()->TellMaster("I'm casting riptide.");//<---changed
         ai->CastSpell(RIPTIDE, target);
+	}
     else if (hp < 70 && CHAIN_HEAL > 0 && ai->GetManaPercent() >= 24)
+	{
+		GetAI()->TellMaster("I'm casting chain heal.");//<---changed
         ai->CastSpell(CHAIN_HEAL, target);
-    // end HealTarget
-}
+	}
+    
+} // end HealTarget
 
 void PlayerbotShamanAI::DoNextCombatManeuver(Unit *pTarget)
 {
@@ -101,10 +112,12 @@ void PlayerbotShamanAI::DoNextCombatManeuver(Unit *pTarget)
     // Heal myself
     if (ai->GetHealthPercent() < 30 && ai->GetManaPercent() >= 32)
     {
+		GetAI()->TellMaster("I'm casting healing wave");//<-------changed
         ai->CastSpell(HEALING_WAVE);
     }
     else if (ai->GetHealthPercent() < 50 && ai->GetManaPercent() >= 19)
     {
+		GetAI()->TellMaster("I'm casting lesser healing wave");//<-------changed
         ai->CastSpell(LESSER_HEALING_WAVE);
     }
     else if (ai->GetHealthPercent() < 70)
@@ -473,7 +486,7 @@ void PlayerbotShamanAI::DoNonCombatActions()
 
     Item* pItem = GetAI()->FindDrink();
 
-    if (pItem != NULL && GetAI()->GetManaPercent() < 15)
+    if (pItem != NULL && GetAI()->GetManaPercent() < 30) //<------changed
     {
         GetAI()->TellMaster("I could use a drink.");
         GetAI()->UseItem(*pItem);
@@ -487,7 +500,7 @@ void PlayerbotShamanAI::DoNonCombatActions()
 
     pItem = GetAI()->FindFood();
 
-    if (pItem != NULL && GetAI()->GetHealthPercent() < 15)
+    if (pItem != NULL && GetAI()->GetHealthPercent() < 30) //<-------changed
     {
         GetAI()->TellMaster("I could use some food.");
         GetAI()->UseItem(*pItem);
@@ -505,8 +518,22 @@ void PlayerbotShamanAI::DoNonCombatActions()
             if( !tPlayer )
                 continue;
 
+            // first rezz em                   added Rezzing part
+            if ( !tPlayer->isAlive() && !tPlayer->IsPlayerbot() )
+            {
+                std::string msg = "rezzing ";
+                msg += tPlayer->GetName();
+                GetPlayerBot()->Say(msg, LANG_UNIVERSAL);
+                GetAI()->CastSpell(ANCESTRAL_SPIRIT, *tPlayer);
+                // rez is only 10 sec, but give time for lag
+                GetAI()->SetIgnoreUpdateTime(17);
+            }
+            else if( tPlayer->isAlive() )
+            {
+
              // heal
              (HealTarget(*tPlayer, tPlayer->GetHealth()*100 / tPlayer->GetMaxHealth()));
+			}
         }
     }
 } // end DoNonCombatActions
