@@ -27,6 +27,7 @@ PlayerbotDruidAI::PlayerbotDruidAI(Player* const master, Player* const bot, Play
     NOURISH             = ai->getSpellId("nourish");
     HEALING_TOUCH       = ai->getSpellId("healing touch");
     MANA_REJUVENATION   = ai->getSpellId("mana rejuvenation");
+	REVIVE              = ai->getSpellId("revive");   //<------changed
     //Druid Forms
     DIRE_BEAR_FORM      = ai->getSpellId("dire bear form");
     CAT_FORM            = ai->getSpellId("cat form");
@@ -47,25 +48,37 @@ PlayerbotDruidAI::~PlayerbotDruidAI() {}
 void PlayerbotDruidAI::HealTarget(Unit &target, uint8 hp)
 {
     PlayerbotAI* ai = GetAI();
-    Player *m_bot = GetPlayerBot();
 
-    if (hp < 70 && REJUVENATION > 0 && !m_bot->HasAura(REJUVENATION, 0) && !m_bot->HasAura(REGROWTH, 0) && ai->GetManaPercent() >=21)
+    if (hp < 70 && REJUVENATION > 0 &&  ai->GetManaPercent() >=21)
+	{
+        GetAI()->TellMaster("I'm casting rejuvenation.");//<---changed
         ai->CastSpell(REJUVENATION, target);
-
-	if (hp < 60 && LIFEBLOOM > 0 && !m_bot->HasAura(LIFEBLOOM, 0) && ai->GetManaPercent() >= 28)
+	}
+    else if (hp < 60 && LIFEBLOOM > 0 &&  ai->GetManaPercent() >= 28)
+	{
+		GetAI()->TellMaster("I'm casting lifebloom.");//<---changed
         ai->CastSpell(LIFEBLOOM, target);
-
-    if (hp < 50 && REGROWTH > 0 && !m_bot->HasAura(REGROWTH, 0) && !m_bot->HasAura(REJUVENATION, 0) && ai->GetManaPercent() >= 33)
+	}
+    else if (hp < 50 && REGROWTH > 0 &&  ai->GetManaPercent() >= 33)
+	{
+        GetAI()->TellMaster("I'm casting regrowth.");//<---changed
         ai->CastSpell(REGROWTH, target);
-
-    if (hp < 45 && WILD_GROWTH > 0 && !m_bot->HasAura(WILD_GROWTH, 0) && ai->GetManaPercent() >= 26)
+	}
+    else if (hp < 45 && WILD_GROWTH > 0 &&  ai->GetManaPercent() >= 26)
+	{
+		GetAI()->TellMaster("I'm casting wild growth.");//<---changed
         ai->CastSpell(WILD_GROWTH, target);
-
-	if (hp < 30 && NOURISH > 0 && ai->GetManaPercent() >= 18)
+	}
+    else if (hp < 30 && NOURISH > 0 && ai->GetManaPercent() >= 18)
+	{
+		GetAI()->TellMaster("I'm casting nourish.");//<---changed
         ai->CastSpell(NOURISH, target);
-
-	if (hp < 25 && HEALING_TOUCH > 0 && ai->GetManaPercent() >= 38)
+	}
+    else if (hp < 25 && HEALING_TOUCH > 0 && ai->GetManaPercent() >= 38)
+	{
+		GetAI()->TellMaster("I'm casting healing touch.");//<---changed
         ai->CastSpell(HEALING_TOUCH, target);
+	}
 } // end HealTarget
 
 void PlayerbotDruidAI::DoNextCombatManeuver(Unit *pTarget)
@@ -407,10 +420,24 @@ void PlayerbotDruidAI::DoNonCombatActions()
             if( !tPlayer )
                 continue;
 
+			// first rezz em                                                 //<-------changed
+            if ( !tPlayer->isAlive() && !tPlayer->IsPlayerbot() )
+            {
+                std::string msg = "rezzing ";
+                msg += tPlayer->GetName();
+                GetPlayerBot()->Say(msg, LANG_UNIVERSAL);
+                GetAI()->CastSpell(REVIVE, *tPlayer);
+                // rez is only 10 sec, but give time for lag
+                GetAI()->SetIgnoreUpdateTime(17);
+            }
+            else if( tPlayer->isAlive() )
+            {
+
              // buff and heal
              (!tPlayer->HasAura(MARK_OF_THE_WILD,0) && GetAI()->CastSpell (MARK_OF_THE_WILD, *tPlayer));
 			 //(!tPlayer->HasAura(THORNS,0) && GetAI()->CastSpell (THORNS, *tPlayer));
              (HealTarget(*tPlayer, tPlayer->GetHealth()*100 / tPlayer->GetMaxHealth()));
+			}
         }
     }
 } // end DoNonCombatActions
