@@ -10,7 +10,7 @@ enum
     SPELL_DISCIPLINE
 };
 
-//class Player;
+  //class Player;
 
 class MANGOS_DLL_SPEC PlayerbotPriestAI : PlayerbotClassAI
 {
