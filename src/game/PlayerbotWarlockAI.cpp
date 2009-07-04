@@ -66,7 +66,7 @@ void PlayerbotWarlockAI::DoNextCombatManeuver(Unit *pTarget)
 		GetAI()->TellMaster("I'm casting life tap");
         ai->CastSpell(LIFE_TAP );
 	}
-	// check for soul link with demon
+/*	// check for soul link with demon
     Pet *pet = m_bot->GetPet();
     if(( pet )
 		&& ( SOUL_LINK>0 && !m_bot->HasAura(SOUL_LINK,0) && ai->GetManaPercent() >= 16 && ai->CastSpell(SOUL_LINK,*m_bot) ))
@@ -74,6 +74,7 @@ void PlayerbotWarlockAI::DoNextCombatManeuver(Unit *pTarget)
 			ai->TellMaster( "casting soul link." );
 			return;
 		}
+*/
 
 	// Damage Spells
     ai->SetInFront( pTarget );
@@ -293,7 +294,7 @@ void PlayerbotWarlockAI::DoNonCombatActions()
         GetAI()->SetIgnoreUpdateTime(30);
         return;
     }
-
+/*
     // check for demon
     if( SUMMON_IMP>0 && !m_demonSummonFailed )
     {
@@ -308,15 +309,18 @@ void PlayerbotWarlockAI::DoNonCombatActions()
                 m_demonSummonFailed = true;
                 GetAI()->TellMaster( "summon demon failed!" );
             }
-        // check for soul link with demon
+		}
+         // check for soul link with demon
 		if ( SOUL_LINK>0 && !m_bot->HasAura(SOUL_LINK, 0) && GetAI()->GetManaPercent() >= 16 && GetAI()->CastSpell(SOUL_LINK,*m_bot) )
 			GetAI()->TellMaster( "casting soul link." );
         }
-        else if( ((float)pet->GetHealth()/(float)pet->GetMaxHealth()) < 0.5f )
+
+        if( ((float)pet->GetHealth()/(float)pet->GetMaxHealth()) < 0.5f )
         {
             // heal demon when health lower 50%
             if( HEALTH_FUNNEL>0 && !pet->HasAura(HEALTH_FUNNEL,0) && GetAI()->CastSpell(HEALTH_FUNNEL,*m_bot) )
                 GetAI()->TellMaster( "healing demon." );
         }
-    }
+*/
+    
 } // end DoNonCombatActions

@@ -294,7 +294,7 @@ void PlayerbotPriestAI::DoNextCombatManeuver(Unit *pTarget)
                 LastSpellShadowMagic = LastSpellShadowMagic +1;
                 break;
             }
-            else if (LastSpellShadowMagic > 10)
+            else if (LastSpellShadowMagic > 11)
             {
                 LastSpellShadowMagic = 0;
                 SpellSequence = SPELL_DISCIPLINE;

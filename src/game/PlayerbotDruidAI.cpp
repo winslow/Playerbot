@@ -94,6 +94,8 @@ void PlayerbotDruidAI::DoNextCombatManeuver(Unit *pTarget)
             return;
     }
 
+	// ------- Non Duel combat ----------
+
     uint32 masterHP = GetMaster()->GetHealth()*100 / GetMaster()->GetMaxHealth();
 
     ai->SetInFront( pTarget );

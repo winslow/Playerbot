@@ -11,6 +11,7 @@ PlayerbotHunterAI::PlayerbotHunterAI(Player* const master, Player* const bot, Pl
     PET_DISMISS          = ai->getSpellId("dismiss pet");
     PET_REVIVE           = ai->getSpellId("revive pet");
     PET_MEND             = ai->getSpellId("mend pet");
+	FEED_PET             = ai->getSpellId("feed pet");
 
     // PET SKILLS
 	SONIC_BLAST          = ai->getSpellId("sonic blast"); // bat
@@ -243,6 +244,12 @@ void PlayerbotHunterAI::DoNonCombatActions()
             // heal pet when health lower 50%
             if( PET_MEND>0 && !pet->HasAura(PET_MEND,0) && ai->GetManaPercent()>=13 && ai->CastSpell(PET_MEND,*m_bot) )
                 ai->TellMaster( "healing pet." );
+        }
+        else if( pet->GetHappinessState() != CONTENT,UNHAPPY )
+        {
+            // feed pet
+            if( FEED_PET>0 && ai->CastSpell(FEED_PET,*m_bot) )
+                ai->TellMaster( "feeding pet." );
         }
     }
 } // end DoNonCombatActions
