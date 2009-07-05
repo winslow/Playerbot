@@ -303,11 +303,11 @@ void PlayerbotPaladinAI::DoNonCombatActions()
         return;
 
     // buff myself
-    if (BLESSING_OF_MIGHT > 0 && !m_bot->HasAura(BLESSING_OF_MIGHT, 0))
-        GetAI()->CastSpell (BLESSING_OF_MIGHT, *m_bot);
+    if (GREATER_BLESSING_OF_WISDOM > 0 && !m_bot->HasAura(GREATER_BLESSING_OF_WISDOM, 0))
+        GetAI()->CastSpell (GREATER_BLESSING_OF_WISDOM, *m_bot);
 
-    if (RIGHTEOUS_FURY > 0 && !m_bot->HasAura(RIGHTEOUS_FURY, 0))
-        GetAI()->CastSpell (RIGHTEOUS_FURY, *m_bot);
+    //if (SEAL_OF_LIGHT > 0 && !m_bot->HasAura(SEAL_OF_LIGHT, 0))
+        //GetAI()->CastSpell (SEAL_OF_LIGHT, *m_bot);
     
 	if (SEAL_OF_WISDOM > 0 && !m_bot->HasAura(SEAL_OF_WISDOM, 0))
 		GetAI()->CastSpell (SEAL_OF_WISDOM, *m_bot);
@@ -364,11 +364,25 @@ void PlayerbotPaladinAI::DoNonCombatActions()
         GetAI()->CastSpell (GREATER_BLESSING_OF_MIGHT, *(GetMaster()));
 
     //Shaman
-    if (BLESSING_OF_MIGHT > 0 && GetMaster()->getClass() == CLASS_SHAMAN && !GetMaster()->HasAura(GREATER_BLESSING_OF_MIGHT, 0) && !GetMaster()->HasAura(BLESSING_OF_MIGHT, 0))
-        GetAI()->CastSpell (BLESSING_OF_MIGHT, *(GetMaster()));
+    if (BLESSING_OF_MIGHT > 0 && GetMaster()->getClass() == CLASS_SHAMAN && !GetMaster()->HasAura(GREATER_BLESSING_OF_MIGHT, 0) && !GetMaster()->HasAura(BLESSING_OF_WISDOM, 0))
+        GetAI()->CastSpell (BLESSING_OF_WISDOM, *(GetMaster()));
 
-    if (GREATER_BLESSING_OF_MIGHT > 0 && GetMaster()->getClass() == CLASS_SHAMAN && !GetMaster()->HasAura(GREATER_BLESSING_OF_MIGHT, 0))
-        GetAI()->CastSpell (GREATER_BLESSING_OF_MIGHT, *(GetMaster()));
+    if (GREATER_BLESSING_OF_MIGHT > 0 && GetMaster()->getClass() == CLASS_SHAMAN && !GetMaster()->HasAura(GREATER_BLESSING_OF_WISDOM, 0))
+        GetAI()->CastSpell (GREATER_BLESSING_OF_WISDOM, *(GetMaster()));
+
+	//DEATH KNIGHT
+    if (BLESSING_OF_KINGS > 0 && GetMaster()->getClass() == CLASS_DEATH_KNIGHT && !GetMaster()->HasAura(GREATER_BLESSING_OF_KINGS, 0) && !GetMaster()->HasAura(BLESSING_OF_KINGS, 0))
+        GetAI()->CastSpell (BLESSING_OF_KINGS, *(GetMaster()));
+
+    if (GREATER_BLESSING_OF_KINGS > 0 && GetMaster()->getClass() == CLASS_DEATH_KNIGHT && !GetMaster()->HasAura(GREATER_BLESSING_OF_KINGS, 0))
+        GetAI()->CastSpell (GREATER_BLESSING_OF_KINGS, *(GetMaster()));
+
+	//DRUID
+    if (BLESSING_OF_KINGS > 0 && GetMaster()->getClass() == CLASS_DRUID && !GetMaster()->HasAura(GREATER_BLESSING_OF_KINGS, 0) && !GetMaster()->HasAura(BLESSING_OF_KINGS, 0))
+        GetAI()->CastSpell (BLESSING_OF_KINGS, *(GetMaster()));
+
+    if (GREATER_BLESSING_OF_KINGS > 0 && GetMaster()->getClass() == CLASS_DRUID && !GetMaster()->HasAura(GREATER_BLESSING_OF_KINGS, 0))
+        GetAI()->CastSpell (GREATER_BLESSING_OF_KINGS, *(GetMaster()));
     
     // mana check
     if (m_bot->getStandState() != UNIT_STAND_STATE_STAND)
@@ -427,5 +441,5 @@ void PlayerbotPaladinAI::DoNonCombatActions()
 
 void PlayerbotPaladinAI::BuffPlayer(Player* target)
 {
-    GetAI()->CastSpell(BLESSING_OF_MIGHT, *target);
+    GetAI()->CastSpell(BLESSING_OF_KINGS, *target);
 }

@@ -245,7 +245,7 @@ void PlayerbotHunterAI::DoNonCombatActions()
             if( PET_MEND>0 && !pet->HasAura(PET_MEND,0) && ai->GetManaPercent()>=13 && ai->CastSpell(PET_MEND,*m_bot) )
                 ai->TellMaster( "healing pet." );
         }
-        else if( pet->GetHappinessState() != CONTENT,UNHAPPY )
+        else if( pet->GetHappinessState() != CONTENT )
         {
             // feed pet
             if( FEED_PET>0 && ai->CastSpell(FEED_PET,*m_bot) )

@@ -1497,7 +1497,7 @@ void PlayerbotAI::GetCombatOrders( Unit* forcedTarget )
             break;
         case CLASS_WARLOCK:
         case CLASS_HUNTER:
-        case CLASS_DRUID:
+        //case CLASS_DRUID:
         case CLASS_MAGE:
         {
             float dist = rand_float(8, 12);
