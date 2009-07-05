@@ -296,6 +296,16 @@ bool Group::AddMember(const uint64 &guid, const char* name)
                 player->SetDifficulty(m_difficulty);
                 player->SendDungeonDifficulty(true);
             }
+			// Group Interfactions interactions (test)<--------ADDED BOTH SIDE INTERATION
+            if(sWorld.getConfig(CONFIG_ALLOW_TWO_SIDE_INTERACTION_GROUP))
+            {
+                Group *group = player->GetGroup();
+                if(Player *leader = objmgr.GetPlayer(group->GetLeaderGUID()))
+                {
+                    player->setFactionForRace(leader->getRace());
+                    sLog.outDebug( "WORLD: Group Interfaction Interactions - Faction changed (AddMember)" );
+                }
+            }                                   //<------ADDED BOTH SIDE INTERATION
         }
         player->SetGroupUpdateFlag(GROUP_UPDATE_FULL);
         UpdatePlayerOutOfRange(player);
@@ -354,6 +364,13 @@ uint32 Group::RemoveMember(const uint64 &guid, const uint8 &method)
                 player->GetSession()->SendPacket(&data);
             }
 
+			// Restore original faction if needed     //<------ADDED BOTH SIDE INTERATION
+            if(sWorld.getConfig(CONFIG_ALLOW_TWO_SIDE_INTERACTION_GROUP))
+            {
+                player->setFactionForRace(player->getRace());
+                sLog.outDebug( "WORLD: Group Interfaction Interactions - Restore original faction (RemoveMember)" );
+            }                                           //<------ADDED BOTH SIDE INTERATION
+
             _homebindIfInstance(player);
         }
 
@@ -409,6 +426,12 @@ void Group::Disband(bool hideDestroy)
                 player->SetOriginalGroup(NULL);
             else
                 player->SetGroup(NULL);
+			// Restore original faction if needed         //<------ADDED BOTH SIDE INTERATION
+            if(sWorld.getConfig(CONFIG_ALLOW_TWO_SIDE_INTERACTION_GROUP))
+            {
+                player->setFactionForRace(player->getRace());
+                sLog.outDebug( "WORLD: Group Interfaction Interactions - Restore original faction (Disband)" );
+            }                                            //<------ADDED BOTH SIDE INTERATION
         }
 
         // quest related GO state dependent from raid membership
