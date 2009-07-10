@@ -30,6 +30,7 @@ class MANGOS_DLL_SPEC PlayerbotHunterAI : PlayerbotClassAI
         // Hunter
         bool m_petSummonFailed;
         bool m_rangedCombat;
+        bool m_petFeedPetFailed;
 
         uint32 PET_SUMMON, PET_DISMISS, PET_REVIVE, PET_MEND, FEED_PET, BAD_ATTITUDE, SONIC_BLAST, NETHER_SHOCK, DEMORALIZING_SCREECH;
         uint32 AUTO_SHOT, HUNTERS_MARK, ARCANE_SHOT, CONCUSSIVE_SHOT, DISTRACTING_SHOT, MULTI_SHOT, EXPLOSIVE_SHOT, SERPENT_STING, SCORPID_STING;

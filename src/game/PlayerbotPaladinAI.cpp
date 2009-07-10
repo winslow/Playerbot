@@ -119,7 +119,7 @@ void PlayerbotPaladinAI::DoNextCombatManeuver(Unit *pTarget)
 	  
         if (masterHP < 25 && HAND_OF_PROTECTION > 0 && !GetMaster()->HasAura(HAND_OF_PROTECTION, 0))
                 ai->CastSpell(HAND_OF_PROTECTION, *(GetMaster()));
-	    if (masterHP < 25 && LAY_ON_HANDS > 0 && !GetMaster()->HasAura(LAY_ON_HANDS, 0))
+	    else if (masterHP < 25 && LAY_ON_HANDS > 0 && !GetMaster()->HasAura(LAY_ON_HANDS, 0))
 				ai->CastSpell(LAY_ON_HANDS, *(GetMaster()));
 	    
    // COMBAT
@@ -127,7 +127,7 @@ void PlayerbotPaladinAI::DoNextCombatManeuver(Unit *pTarget)
     switch (SpellSequence)
     {
         case SPELL_HOLY2:
-            if (CONCENTRATION_AURA > 0 && LastSpellHoly2 <= 1 && ai->GetManaPercent() >= 60)
+            if (CONCENTRATION_AURA > 0 && LastSpellHoly2 <= 1)
             {
 				GetAI()->TellMaster("I'm casting CONSECRATION AURA");
                 ai->CastSpell(CONCENTRATION_AURA);
@@ -135,7 +135,7 @@ void PlayerbotPaladinAI::DoNextCombatManeuver(Unit *pTarget)
                 LastSpellHoly2 = LastSpellHoly2 +1;
                 break;
             }
-			else if (CONSECRATION > 0 && LastSpellHoly2 <= 2 && ai->GetManaPercent() >= 60)
+			else if (CONSECRATION > 0 && LastSpellHoly2 <= 2)
             {
 				GetAI()->TellMaster("I'm casting CONSECRATION");
                 ai->CastSpell(CONSECRATION);
@@ -143,7 +143,7 @@ void PlayerbotPaladinAI::DoNextCombatManeuver(Unit *pTarget)
                 LastSpellHoly2 = LastSpellHoly2 +1;
                 break;
             }
-            else if (EXORCISM > 0 && LastSpellHoly2 <3 && ai->GetManaPercent() >= 60)
+            else if (EXORCISM > 0 && LastSpellHoly2 <3)
             {
 				GetAI()->TellMaster("I'm casting exorcism");
                 ai->CastSpell(EXORCISM);
@@ -151,7 +151,7 @@ void PlayerbotPaladinAI::DoNextCombatManeuver(Unit *pTarget)
                 LastSpellHoly2 = LastSpellHoly2 +1;
                 break;
             }
-            else if (HOLY_WRATH > 0 && LastSpellHoly2 <4 && ai->GetManaPercent() >= 60)
+            else if (HOLY_WRATH > 0 && LastSpellHoly2 <4)
             {
                 GetAI()->TellMaster("I'm casting holy wrath");
                 ai->CastSpell(HOLY_WRATH);
@@ -159,7 +159,7 @@ void PlayerbotPaladinAI::DoNextCombatManeuver(Unit *pTarget)
                 LastSpellHoly2 = LastSpellHoly2 +1;
                 break;
              }
-             else if (DIVINE_PLEA > 0 && LastSpellHoly2 <5 && ai->GetManaPercent() >= 60)
+             else if (DIVINE_PLEA > 0 && LastSpellHoly2 <5)
              {
                  GetAI()->TellMaster("I'm casting divine plea");
                  ai->CastSpell(DIVINE_PLEA);
@@ -176,7 +176,7 @@ void PlayerbotPaladinAI::DoNextCombatManeuver(Unit *pTarget)
             LastSpellHoly2 = LastSpellHoly2 +1;
 
         case SPELL_PROTECTION2:
-			if (DEVOTION_AURA > 0 && LastSpellProtection2 <1 && ai->GetManaPercent() >= 60)
+			if (DEVOTION_AURA > 0 && LastSpellProtection2 <1)
             {
                 GetAI()->TellMaster("I'm casting hand of DEVOTION AURA");
                 ai->CastSpell(DEVOTION_AURA);
@@ -184,7 +184,7 @@ void PlayerbotPaladinAI::DoNextCombatManeuver(Unit *pTarget)
                 LastSpellProtection2 = LastSpellProtection2 +1;
                 break;
             }
-            else if (HAND_OF_RECKONING > 0 && LastSpellProtection2 <2 && ai->GetManaPercent() >= 60)
+            else if (HAND_OF_RECKONING > 0 && LastSpellProtection2 <2)
             {
                 GetAI()->TellMaster("I'm casting hand of reckoning");
                 ai->CastSpell(HAND_OF_RECKONING);
@@ -192,7 +192,7 @@ void PlayerbotPaladinAI::DoNextCombatManeuver(Unit *pTarget)
                 LastSpellProtection2 = LastSpellProtection2 +1;
                 break;
             }
-            else if (SHIELD_OF_RIGHTEOUSNESS > 0 && LastSpellProtection2 <3 && ai->GetManaPercent() >= 60)
+            else if (SHIELD_OF_RIGHTEOUSNESS > 0 && LastSpellProtection2 <3)
             {
                 GetAI()->TellMaster("I'm casting shield of righteousness");
                 ai->CastSpell(SHIELD_OF_RIGHTEOUSNESS);
@@ -200,7 +200,7 @@ void PlayerbotPaladinAI::DoNextCombatManeuver(Unit *pTarget)
                 LastSpellProtection2 = LastSpellProtection2 +1;
                 break;
             }
-           else if (AVENGERS_SHIELD > 0 && LastSpellProtection2 <4 && ai->GetManaPercent() >= 60)
+           else if (AVENGERS_SHIELD > 0 && LastSpellProtection2 <4)
             {
                 GetAI()->TellMaster("I'm casting avengers shield.");
                 ai->CastSpell(AVENGERS_SHIELD);
@@ -208,7 +208,7 @@ void PlayerbotPaladinAI::DoNextCombatManeuver(Unit *pTarget)
                 (LastSpellProtection2 = LastSpellProtection2 +1);
                 break;
             }
-            else if (HAMMER_OF_JUSTICE > 0 && LastSpellProtection2 <5 && ai->GetManaPercent() >= 60)
+            else if (HAMMER_OF_JUSTICE > 0 && LastSpellProtection2 <5)
             {
                 GetAI()->TellMaster("I'm casting hammer of justice.");
                 ai->CastSpell(HAMMER_OF_JUSTICE);
@@ -216,7 +216,7 @@ void PlayerbotPaladinAI::DoNextCombatManeuver(Unit *pTarget)
                 LastSpellProtection2 = LastSpellProtection2 +1;
                 break;
             }
-            else if (HAMMER_OF_RIGHTEOUS > 0 && LastSpellProtection2 <6 && ai->GetManaPercent() >= 60)
+            else if (HAMMER_OF_RIGHTEOUS > 0 && LastSpellProtection2 <6)
             {
 				GetAI()->TellMaster("I'm casting hammer of righteous.");
                 ai->CastSpell(HAMMER_OF_RIGHTEOUS);
@@ -224,7 +224,7 @@ void PlayerbotPaladinAI::DoNextCombatManeuver(Unit *pTarget)
                 LastSpellProtection2 = LastSpellProtection2 +1;
                 break;
             }
-            else if (HOLY_SHEILD > 0 && LastSpellProtection2 <7 && ai->GetManaPercent() >= 60)
+            else if (HOLY_SHEILD > 0 && LastSpellProtection2 <7)
             {
 				GetAI()->TellMaster("I'm casting holy sheild.");
                 ai->CastSpell(HOLY_SHEILD);
@@ -241,7 +241,7 @@ void PlayerbotPaladinAI::DoNextCombatManeuver(Unit *pTarget)
             LastSpellProtection2 = LastSpellProtection2 +1;
 
         case SPELL_RETRIBUTION:
-			if (RETRIBUTION_AURA > 0 && LastSpellRetribution <1 && ai->GetManaPercent() >= 60)
+			if (RETRIBUTION_AURA > 0 && LastSpellRetribution <1)
             {
                 GetAI()->TellMaster("I'm casting judgement of RETRIBUTION AURA");
                 ai->CastSpell(RETRIBUTION_AURA);
@@ -249,7 +249,7 @@ void PlayerbotPaladinAI::DoNextCombatManeuver(Unit *pTarget)
                 LastSpellRetribution = LastSpellRetribution + 1;
                 break;
             }
-            else if (JUDGEMENT_OF_LIGHT > 0 && LastSpellRetribution <2 && ai->GetManaPercent() >= 60)
+            else if (JUDGEMENT_OF_LIGHT > 0 && LastSpellRetribution <2)
             {
                 GetAI()->TellMaster("I'm casting judgement of light");
                 ai->CastSpell(JUDGEMENT_OF_LIGHT);
@@ -257,7 +257,7 @@ void PlayerbotPaladinAI::DoNextCombatManeuver(Unit *pTarget)
                 LastSpellRetribution = LastSpellRetribution + 1;
                 break;
             }
-            else if (CRUSADER_STRIKE > 0 && LastSpellRetribution <3 && ai->GetManaPercent() >= 60)
+            else if (CRUSADER_STRIKE > 0 && LastSpellRetribution <3)
             {
                 GetAI()->TellMaster("I'm casting crusader strike");
                 ai->CastSpell(CRUSADER_STRIKE);
@@ -265,7 +265,7 @@ void PlayerbotPaladinAI::DoNextCombatManeuver(Unit *pTarget)
                 LastSpellRetribution = LastSpellRetribution + 1;
                 break;
             }
-            else if (HAMMER_OF_WRATH > 0 && LastSpellRetribution <4 && ai->GetManaPercent() >= 60)
+            else if (HAMMER_OF_WRATH > 0 && LastSpellRetribution <4)
             {
                 GetAI()->TellMaster("I'm casting hammer of wrath");
                 ai->CastSpell(HAMMER_OF_WRATH);
@@ -273,7 +273,7 @@ void PlayerbotPaladinAI::DoNextCombatManeuver(Unit *pTarget)
                 LastSpellRetribution = LastSpellRetribution + 1;
                 break;
             }
-            else if (DIVINE_STORM > 0 && LastSpellRetribution <5 && ai->GetManaPercent() >= 60)
+            else if (DIVINE_STORM > 0 && LastSpellRetribution <5)
             {
                 GetAI()->TellMaster("I'm casting divine storm");
                 ai->CastSpell(DIVINE_STORM);
@@ -306,11 +306,14 @@ void PlayerbotPaladinAI::DoNonCombatActions()
     if (GREATER_BLESSING_OF_WISDOM > 0 && !m_bot->HasAura(GREATER_BLESSING_OF_WISDOM, 0))
         GetAI()->CastSpell (GREATER_BLESSING_OF_WISDOM, *m_bot);
 
-    //if (SEAL_OF_LIGHT > 0 && !m_bot->HasAura(SEAL_OF_LIGHT, 0))
-        //GetAI()->CastSpell (SEAL_OF_LIGHT, *m_bot);
+    if (BLESSING_OF_MIGHT > 0 && !m_bot->HasAura(BLESSING_OF_MIGHT, 0))
+        GetAI()->CastSpell (BLESSING_OF_MIGHT, *m_bot);
     
 	if (SEAL_OF_WISDOM > 0 && !m_bot->HasAura(SEAL_OF_WISDOM, 0))
 		GetAI()->CastSpell (SEAL_OF_WISDOM, *m_bot);
+
+	if (RIGHTEOUS_FURY > 0 && !m_bot->HasAura(RIGHTEOUS_FURY, 0))
+        GetAI()->CastSpell (RIGHTEOUS_FURY, *m_bot);
 
 
     //Select Class buff seq.
@@ -433,10 +436,12 @@ void PlayerbotPaladinAI::DoNonCombatActions()
               GetAI()->SetIgnoreUpdateTime(17);
            }
            else if( tPlayer->isAlive() )
-           {    
+           {
+           (HealTarget(*tPlayer, tPlayer->GetHealth()*100 / tPlayer->GetMaxHealth())); // need to heal group also not just master, so this line is add in
+           return;
+		   }
 		}
 	 }
-  }
 } // end DoNonCombatActions
 
 void PlayerbotPaladinAI::BuffPlayer(Player* target)

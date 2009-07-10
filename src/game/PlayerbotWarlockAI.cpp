@@ -61,7 +61,7 @@ void PlayerbotWarlockAI::DoNextCombatManeuver(Unit *pTarget)
 
     ai->Follow(*GetMaster()); // dont want to melee mob
 	// check for mana and life tap
-	if (ai->GetManaPercent() < 20)
+	if (ai->GetManaPercent() < 35)
 	{
 		GetAI()->TellMaster("I'm casting life tap");
         ai->CastSpell(LIFE_TAP );

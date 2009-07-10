@@ -6,7 +6,7 @@ This was taken from the Trinity site, and modified slightly by me to get some of
 
 Bots will only use abilities that they have - for example, a priest will only use the renew spell if it has been trained. Also, bot's equipment will lose durability like any other character. So every so often you'll need to log in and repair and train your bot.
 
-For Mangos 7800+
+For Mangos 8149+
 
 Commands:
 

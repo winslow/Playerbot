@@ -72,12 +72,12 @@ void PlayerbotPriestAI::HealTarget(Unit &target, uint8 hp)
         GetAI()->TellMaster("I'm casting flash heal.");
         ai->CastSpell(FLASH_HEAL, target);
     }
-    else if (hp < 30 && GREAT_HEAL > 0 && ai->GetManaPercent() >= 36)
+    else if (hp < 30 && GREAT_HEAL > 0 && ai->GetManaPercent() >= 45)
     {
         GetAI()->TellMaster("I'm casting greater heal.");
         ai->CastSpell(GREAT_HEAL, target);
     }
-    else if (hp < 33 && BINDING_HEAL > 0 && ai->GetManaPercent() >= 27)
+    else if (hp < 35 && BINDING_HEAL > 0 && ai->GetManaPercent() >= 27)
     {
         GetAI()->TellMaster("I'm casting binding heal.");
         ai->CastSpell(BINDING_HEAL, target);

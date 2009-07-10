@@ -75,7 +75,7 @@ void PlayerbotHunterAI::DoNextCombatManeuver(Unit *pTarget)
     // check for pet and heal if neccessary
     Pet *pet = m_bot->GetPet();
     if(( pet )
-		&& ( ((float)pet->GetHealth()/(float)pet->GetMaxHealth()) < 0.5f )
+		&& ( ((float)pet->GetHealth()/(float)pet->GetMaxHealth()) < 0.7f )
 		&& ( PET_MEND>0 && !pet->HasAura(PET_MEND,0) && ai->GetManaPercent()>=13 && ai->CastSpell(PET_MEND,*m_bot) ))
 		{
 			ai->TellMaster( "healing pet." );
@@ -217,7 +217,7 @@ void PlayerbotHunterAI::DoNonCombatActions()
         return;
     }
 
-    // check for pet
+// check for pet
     if( PET_SUMMON>0 && !m_petSummonFailed )
     {
         // we can summon pet, and no critical summon errors before
@@ -239,17 +239,27 @@ void PlayerbotHunterAI::DoNonCombatActions()
             if( PET_REVIVE>0 && ai->GetManaPercent()>=80 && ai->CastSpell(PET_REVIVE,*m_bot) )
                 ai->TellMaster( "reviving pet." );
         }
-        else if( ((float)pet->GetHealth()/(float)pet->GetMaxHealth()) < 0.5f )
-        {
-            // heal pet when health lower 50%
-            if( PET_MEND>0 && !pet->HasAura(PET_MEND,0) && ai->GetManaPercent()>=13 && ai->CastSpell(PET_MEND,*m_bot) )
-                ai->TellMaster( "healing pet." );
-        }
-        else if( pet->GetHappinessState() != CONTENT )
+/*          // feed pet
+        else if( ((float)pet->GetHealth()/(float)pet->GetMaxHealth()) < 0.8f )      //Just stuck this in, trying different things, main thing need to figure out food item line.
+		else if( pet->GetHappinessState() != UNHAPPY )
         {
             // feed pet
-            if( FEED_PET>0 && ai->CastSpell(FEED_PET,*m_bot) )
-                ai->TellMaster( "feeding pet." );
-        }
+            if( UNHAPPY>0 && !pet->HasAura(UNHAPPY,0)  && ai->CastSpell(FEED_PET,*m_bot) )
+		{   
+            if( FEED_PET>0 && !pet->HasAura(FEED_PET,0)  && ai->CastSpell(FEED_PET,*m_bot) )
+                ai->TellMaster( "feeding pet." ); 
+            else
+            {
+                m_petFeedPetFailed = true;
+                ai->TellMaster( "Feed pet failed!" );                
+            }
+		}*/
+        else if( ((float)pet->GetHealth()/(float)pet->GetMaxHealth()) < 0.7f )
+        {
+            // heal pet when health lower 70%
+            if( PET_MEND>0 && !pet->HasAura(PET_MEND,0) && ai->GetManaPercent()>=13 && ai->CastSpell(PET_MEND,*m_bot) )
+                ai->TellMaster( "healing pet." );
+			    return; 
+		}
     }
 } // end DoNonCombatActions
