@@ -469,16 +469,16 @@ void PlayerbotShamanAI::DoNonCombatActions()
 		(!m_bot->HasAura(LIGHTNING_SHIELD, 0) && !m_bot->HasAura(WATER_SHIELD, 0) && GetAI()->CastSpell(LIGHTNING_SHIELD,*m_bot) );
 
 	// buff myself weapon
-	if (ROCKBITER_WEAPON > 0)
-		(!m_bot->HasAura(ROCKBITER_WEAPON, 0) && !m_bot->HasAura(EARTHLIVING_WEAPON, 0) && !m_bot->HasAura(WINDFURY_WEAPON, 0) && !m_bot->HasAura(FLAMETONGUE_WEAPON, 0) && !m_bot->HasAura(FROSTBRAND_WEAPON, 0) && GetAI()->CastSpell(ROCKBITER_WEAPON,*m_bot) );//changed per rrtn
-	else if (EARTHLIVING_WEAPON > 0)
-		(!m_bot->HasAura(EARTHLIVING_WEAPON, 0) && !m_bot->HasAura(EARTHLIVING_WEAPON, 0) && !m_bot->HasAura(FLAMETONGUE_WEAPON, 0) && !m_bot->HasAura(FROSTBRAND_WEAPON, 0) && !m_bot->HasAura(ROCKBITER_WEAPON, 0) && GetAI()->CastSpell(WINDFURY_WEAPON,*m_bot) );//changed per rrtn
+	if (EARTHLIVING_WEAPON > 0)
+		(!m_bot->HasAura(EARTHLIVING_WEAPON, 0) && !m_bot->HasAura(EARTHLIVING_WEAPON, 0) && !m_bot->HasAura(FLAMETONGUE_WEAPON, 0) && !m_bot->HasAura(FROSTBRAND_WEAPON, 0) && !m_bot->HasAura(ROCKBITER_WEAPON, 0) && GetAI()->CastSpell(WINDFURY_WEAPON,*m_bot) );
     else if (WINDFURY_WEAPON > 0)
 		(!m_bot->HasAura(WINDFURY_WEAPON, 0) && !m_bot->HasAura(EARTHLIVING_WEAPON, 0) && !m_bot->HasAura(FLAMETONGUE_WEAPON, 0) && !m_bot->HasAura(FROSTBRAND_WEAPON, 0) && !m_bot->HasAura(ROCKBITER_WEAPON, 0) && GetAI()->CastSpell(WINDFURY_WEAPON,*m_bot) );
     else if (FLAMETONGUE_WEAPON > 0)
 		(!m_bot->HasAura(FLAMETONGUE_WEAPON, 0) && !m_bot->HasAura(EARTHLIVING_WEAPON, 0) && !m_bot->HasAura(WINDFURY_WEAPON, 0) && !m_bot->HasAura(FROSTBRAND_WEAPON, 0) && !m_bot->HasAura(ROCKBITER_WEAPON, 0) && GetAI()->CastSpell(FLAMETONGUE_WEAPON,*m_bot) );
     else if (FROSTBRAND_WEAPON > 0)
 		(!m_bot->HasAura(FROSTBRAND_WEAPON, 0) && !m_bot->HasAura(EARTHLIVING_WEAPON, 0) && !m_bot->HasAura(WINDFURY_WEAPON, 0) && !m_bot->HasAura(FLAMETONGUE_WEAPON, 0) && !m_bot->HasAura(ROCKBITER_WEAPON, 0) && GetAI()->CastSpell(FROSTBRAND_WEAPON,*m_bot) );
+    else if (ROCKBITER_WEAPON > 0)
+		(!m_bot->HasAura(ROCKBITER_WEAPON, 0) && !m_bot->HasAura(EARTHLIVING_WEAPON, 0) && !m_bot->HasAura(WINDFURY_WEAPON, 0) && !m_bot->HasAura(FLAMETONGUE_WEAPON, 0) && !m_bot->HasAura(FROSTBRAND_WEAPON, 0) && GetAI()->CastSpell(ROCKBITER_WEAPON,*m_bot) );
 
     // mana check
     if (m_bot->getStandState() != UNIT_STAND_STATE_STAND)
