@@ -26,7 +26,7 @@ PlayerbotShamanAI::PlayerbotShamanAI(Player* const master, Player* const bot, Pl
     HEROISM                  = ai->getSpellId("heroism");
 	FERAL_SPIRIT             = ai->getSpellId("feral spirit");
 	LIGHTNING_SHIELD         = ai->getSpellId("lightning");
-	ROCKBITER_WEAPON         = ai->getSpellId("rockbiter weapon");
+	ROCKBITER_WEAPON         = ai->getSpellId("rockbiter"); //per rrtn
 	FLAMETONGUE_WEAPON       = ai->getSpellId("flametongue weapon");
 	FROSTBRAND_WEAPON        = ai->getSpellId("frostbrand weapon");
 	WINDFURY_WEAPON          = ai->getSpellId("windfury weapon");
@@ -76,7 +76,7 @@ void PlayerbotShamanAI::HealTarget(Unit &target, uint8 hp)
         GetAI()->TellMaster("I'm casting lesser healing wave.");//<---changed
         ai->CastSpell(LESSER_HEALING_WAVE, target);
 	}
-	else if (hp < 55 && RIPTIDE > 0 && ai->GetManaPercent() >= 21)
+	else if (hp < 55 && RIPTIDE > 0 && !target.HasAura(RIPTIDE, 0) && ai->GetManaPercent() >= 21) //changed per rrtn
 	{
 		GetAI()->TellMaster("I'm casting riptide.");//<---changed
         ai->CastSpell(RIPTIDE, target);
@@ -176,28 +176,28 @@ void PlayerbotShamanAI::DoNextCombatManeuver(Unit *pTarget)
                 LastSpellEnhancement = LastSpellEnhancement +1;
                 break;
             }
-            else if (FROST_RESISTANCE_TOTEM > 0 && LastSpellEnhancement == 10 && (!m_bot->HasAura(FROST_RESISTANCE_TOTEM, 0)) && (!m_bot->HasAura(TOTEM_OF_WRATH, 0)) && (!m_bot->HasAura(FLAMETONGUE_TOTEM, 0)) && (!m_bot->HasAura(FIRE_RESISTANCE_TOTEM, 0)) && ai->GetManaPercent() >= 10)
+            else if (FROST_RESISTANCE_TOTEM > 0 && LastSpellEnhancement == 10 && (!m_bot->HasAura(FROST_RESISTANCE_TOTEM, 0)) && (!m_bot->HasAura(TOTEM_OF_WRATH, 0)) && (!m_bot->HasAura(FLAMETONGUE_TOTEM, 0))  && ai->GetManaPercent() >= 10) //changed per rrtn
             {
                 ai->CastSpell(FROST_RESISTANCE_TOTEM);
                 SpellSequence = SPELL_RESTORATION;
                 LastSpellEnhancement = LastSpellEnhancement +1;
                 break;
             }
-            else if (FLAMETONGUE_TOTEM > 0 && LastSpellEnhancement == 15 && (!m_bot->HasAura(FLAMETONGUE_TOTEM, 0)) && (!m_bot->HasAura(TOTEM_OF_WRATH, 0)) && (!m_bot->HasAura(FROST_RESISTANCE_TOTEM, 0)) && (!m_bot->HasAura(FIRE_RESISTANCE_TOTEM, 0)) && ai->GetManaPercent() >= 14)
+            else if (FLAMETONGUE_TOTEM > 0 && LastSpellEnhancement == 15 && (!m_bot->HasAura(FLAMETONGUE_TOTEM, 0)) && (!m_bot->HasAura(TOTEM_OF_WRATH, 0)) && (!m_bot->HasAura(FROST_RESISTANCE_TOTEM, 0))  && ai->GetManaPercent() >= 14)
             {
                 ai->CastSpell(FLAMETONGUE_TOTEM);
                 SpellSequence = SPELL_RESTORATION;
                 LastSpellEnhancement = LastSpellEnhancement +1;
                 break;
             }
-            else if (FIRE_RESISTANCE_TOTEM > 0 && LastSpellEnhancement == 20 && (!m_bot->HasAura(FIRE_RESISTANCE_TOTEM, 0)) && (!m_bot->HasAura(TOTEM_OF_WRATH, 0)) && (!m_bot->HasAura(FROST_RESISTANCE_TOTEM, 0)) && (!m_bot->HasAura(FLAMETONGUE_TOTEM, 0)) && ai->GetManaPercent() >= 10)
+            else if (FIRE_RESISTANCE_TOTEM > 0 && LastSpellEnhancement == 20 && (!m_bot->HasAura(FIRE_RESISTANCE_TOTEM, 0)) && (!m_bot->HasAura(HEALING_STREAM_TOTEM, 0)) && (!m_bot->HasAura(MANA_SPRING_TOTEM, 0)) && ai->GetManaPercent() >= 10) //changed per rrtn
             {
                 ai->CastSpell(FIRE_RESISTANCE_TOTEM);
                 SpellSequence = SPELL_RESTORATION;
                 LastSpellEnhancement = LastSpellEnhancement +1;
                 break;
             }
-            else if (GROUNDING_TOTEM > 0 && LastSpellEnhancement == 25 && (!m_bot->HasAura(GROUNDING_TOTEM, 0)) && (!m_bot->HasAura(WRATH_OF_AIR_TOTEM, 0)) && (!m_bot->HasAura(WIND_FURY_TOTEM, 0)) && ai->GetManaPercent() >= 5)
+            else if (GROUNDING_TOTEM > 0 && LastSpellEnhancement == 25 && (!m_bot->HasAura(GROUNDING_TOTEM, 0)) && (!m_bot->HasAura(WRATH_OF_AIR_TOTEM, 0)) && (!m_bot->HasAura(WIND_FURY_TOTEM, 0)) && ai->GetManaPercent() >= 5) //changed per rrtn
             {
                 ai->CastSpell(GROUNDING_TOTEM);
                 SpellSequence = SPELL_RESTORATION;
@@ -267,13 +267,13 @@ void PlayerbotShamanAI::DoNextCombatManeuver(Unit *pTarget)
                 LastSpellEnhancement = LastSpellEnhancement +1;
                 break;
             }
-		    /*else if (SHAMANISTIC_RAGE > 0 && (!GetMaster()->HasAura(SHAMANISTIC_RAGE, 0)) && LastSpellEnhancement == 11)
+		    else if (SHAMANISTIC_RAGE > 0 && (!m_bot->HasAura(SHAMANISTIC_RAGE, 0)) && LastSpellEnhancement == 11) //changed per rrtn
             {
-                ai->CastSpell(SHAMANISTIC_RAGE);
+                ai->CastSpell(SHAMANISTIC_RAGE, *m_bot);
                 SpellSequence = SPELL_RESTORATION;
                 LastSpellEnhancement = LastSpellEnhancement +1;
                 break;
-            }*/
+            }
             else if (LastSpellEnhancement > 50)
             {
                 LastSpellEnhancement = 1;
@@ -352,7 +352,7 @@ void PlayerbotShamanAI::DoNextCombatManeuver(Unit *pTarget)
                 LastSpellElemental = LastSpellElemental + 1;
                 break;
             }
-			else if (LAVA_BURST > 0 && LastSpellElemental == 5 && (!pTarget->HasAura(FLAME_SHOCK, 0)) && ai->GetManaPercent() >= 10)
+			else if (LAVA_BURST > 0 && LastSpellElemental == 5 && (pTarget->HasAura(FLAME_SHOCK, 0)) && ai->GetManaPercent() >= 10)//changed per rrtn
             {
                 ai->CastSpell(LAVA_BURST, *pTarget);
                 SpellSequence = SPELL_ENHANCEMENT;
@@ -469,16 +469,16 @@ void PlayerbotShamanAI::DoNonCombatActions()
 		(!m_bot->HasAura(LIGHTNING_SHIELD, 0) && !m_bot->HasAura(WATER_SHIELD, 0) && GetAI()->CastSpell(LIGHTNING_SHIELD,*m_bot) );
 
 	// buff myself weapon
-	if (EARTHLIVING_WEAPON > 0)
-		(!m_bot->HasAura(EARTHLIVING_WEAPON, 0) && !m_bot->HasAura(EARTHLIVING_WEAPON, 0) && !m_bot->HasAura(FLAMETONGUE_WEAPON, 0) && !m_bot->HasAura(FROSTBRAND_WEAPON, 0) && !m_bot->HasAura(ROCKBITER_WEAPON, 0) && GetAI()->CastSpell(WINDFURY_WEAPON,*m_bot) );
+	if (ROCKBITER_WEAPON > 0)
+		(!m_bot->HasAura(ROCKBITER_WEAPON, 0) && !m_bot->HasAura(EARTHLIVING_WEAPON, 0) && !m_bot->HasAura(WINDFURY_WEAPON, 0) && !m_bot->HasAura(FLAMETONGUE_WEAPON, 0) && !m_bot->HasAura(FROSTBRAND_WEAPON, 0) && GetAI()->CastSpell(ROCKBITER_WEAPON,*m_bot) );//changed per rrtn
+	else if (EARTHLIVING_WEAPON > 0)
+		(!m_bot->HasAura(EARTHLIVING_WEAPON, 0) && !m_bot->HasAura(EARTHLIVING_WEAPON, 0) && !m_bot->HasAura(FLAMETONGUE_WEAPON, 0) && !m_bot->HasAura(FROSTBRAND_WEAPON, 0) && !m_bot->HasAura(ROCKBITER_WEAPON, 0) && GetAI()->CastSpell(WINDFURY_WEAPON,*m_bot) );//changed per rrtn
     else if (WINDFURY_WEAPON > 0)
 		(!m_bot->HasAura(WINDFURY_WEAPON, 0) && !m_bot->HasAura(EARTHLIVING_WEAPON, 0) && !m_bot->HasAura(FLAMETONGUE_WEAPON, 0) && !m_bot->HasAura(FROSTBRAND_WEAPON, 0) && !m_bot->HasAura(ROCKBITER_WEAPON, 0) && GetAI()->CastSpell(WINDFURY_WEAPON,*m_bot) );
     else if (FLAMETONGUE_WEAPON > 0)
 		(!m_bot->HasAura(FLAMETONGUE_WEAPON, 0) && !m_bot->HasAura(EARTHLIVING_WEAPON, 0) && !m_bot->HasAura(WINDFURY_WEAPON, 0) && !m_bot->HasAura(FROSTBRAND_WEAPON, 0) && !m_bot->HasAura(ROCKBITER_WEAPON, 0) && GetAI()->CastSpell(FLAMETONGUE_WEAPON,*m_bot) );
     else if (FROSTBRAND_WEAPON > 0)
 		(!m_bot->HasAura(FROSTBRAND_WEAPON, 0) && !m_bot->HasAura(EARTHLIVING_WEAPON, 0) && !m_bot->HasAura(WINDFURY_WEAPON, 0) && !m_bot->HasAura(FLAMETONGUE_WEAPON, 0) && !m_bot->HasAura(ROCKBITER_WEAPON, 0) && GetAI()->CastSpell(FROSTBRAND_WEAPON,*m_bot) );
-    else if (ROCKBITER_WEAPON > 0)
-		(!m_bot->HasAura(ROCKBITER_WEAPON, 0) && !m_bot->HasAura(EARTHLIVING_WEAPON, 0) && !m_bot->HasAura(WINDFURY_WEAPON, 0) && !m_bot->HasAura(FLAMETONGUE_WEAPON, 0) && !m_bot->HasAura(FROSTBRAND_WEAPON, 0) && GetAI()->CastSpell(ROCKBITER_WEAPON,*m_bot) );
 
     // mana check
     if (m_bot->getStandState() != UNIT_STAND_STATE_STAND)
@@ -533,6 +533,7 @@ void PlayerbotShamanAI::DoNonCombatActions()
 
              // heal
              (HealTarget(*tPlayer, tPlayer->GetHealth()*100 / tPlayer->GetMaxHealth()));
+             return;
 			}
         }
     }
