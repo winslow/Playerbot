@@ -431,19 +431,9 @@ void WorldSession::LogoutPlayer(bool Save)
         // the player may not be in the world when logging out
         // e.g if he got disconnected during a transfer to another map
         // calls to GetMap in this case may cause crashes
-        if(_player->IsInWorld()) _player->GetMap()->Remove(_player, false);
-        // RemoveFromWorld does cleanup that requires the player to be in the accessor
-        ObjectAccessor::Instance().RemoveObject(_player);
-
-        ///- Delete the player object
-        _player->CleanupsBeforeDelete();                    // do some cleanup before deleting to prevent crash at crossreferences to already deleted data
-
-		sSocialMgr.RemovePlayerSocial (_player->GetGUIDLow ());
-
-        uint32 guid = _player->GetGUIDLow();
-
-        delete _player;
-        _player = NULL;
+        Map* _map = _player->GetMap();
+        _map->Remove(_player, true);
+        _player = NULL;                                     // deleted in Remove call
 
         ///- Send the 'logout complete' packet to the client
         WorldPacket data( SMSG_LOGOUT_COMPLETE, 0 );
@@ -451,8 +441,8 @@ void WorldSession::LogoutPlayer(bool Save)
 
         ///- Since each account can only have one online character at any given time, ensure all characters for active account are marked as offline
         //No SQL injection as AccountId is uint32
-        CharacterDatabase.PExecute("UPDATE characters SET online = 0 WHERE guid = '%u'", guid);
-        sLog.outDebug( "SESSION: Sent SMSG_LOGOUT_COMPLETE Message" );
+        //CharacterDatabase.PExecute("UPDATE characters SET online = 0 WHERE guid = '%u'", guid);//<---changed just commented out and compiled everything seams to be working
+        //sLog.outDebug( "SESSION: Sent SMSG_LOGOUT_COMPLETE Message" );//<---changed just commented out and compiled everything seams to be working
     }
 
     m_playerLogout = false;
