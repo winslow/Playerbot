@@ -369,11 +369,15 @@ void WorldSession::LogoutPlayer(bool Save)
             }
         }
 
+////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
+
         ///- Reset the online field in the account table
         // no point resetting online in character table here as Player::SaveToDB() will set it to 1 since player has not been removed from world at this stage
         //No SQL injection as AccountID is uint32
         if (! _player->IsPlayerbot())
             loginDatabase.PExecute("UPDATE account SET online = 0 WHERE id = '%u'", GetAccountId());
+
+//////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 
         ///- If the player is in a guild, update the guild roster and broadcast a logout message to other guild members
         Guild *guild = objmgr.GetGuildById(_player->GetGuildId());
@@ -427,6 +431,13 @@ void WorldSession::LogoutPlayer(bool Save)
         sSocialMgr.SendFriendStatus(_player, FRIEND_OFFLINE, _player->GetGUIDLow(), true);
         sSocialMgr.RemovePlayerSocial (_player->GetGUIDLow ());
 
+///////////////////////////////////////////////////////////////////////////////////////////////////////////////////
+
+		// Playerbot - remember player GUID for update SQL below
+        uint32 guid = _player->GetGUIDLow();
+
+///////////////////////////////////////////////////////////////////////////////////////////////////////////////////
+
         ///- Remove the player from the world
         // the player may not be in the world when logging out
         // e.g if he got disconnected during a transfer to another map
@@ -441,8 +452,8 @@ void WorldSession::LogoutPlayer(bool Save)
 
         ///- Since each account can only have one online character at any given time, ensure all characters for active account are marked as offline
         //No SQL injection as AccountId is uint32
-        //CharacterDatabase.PExecute("UPDATE characters SET online = 0 WHERE guid = '%u'", guid);//<---changed just commented out and compiled everything seams to be working
-        //sLog.outDebug( "SESSION: Sent SMSG_LOGOUT_COMPLETE Message" );//<---changed just commented out and compiled everything seams to be working
+        CharacterDatabase.PExecute("UPDATE characters SET online = 0 WHERE guid = '%u'", guid);//<---changed just commented out and compiled everything seams to be working
+        sLog.outDebug( "SESSION: Sent SMSG_LOGOUT_COMPLETE Message" );//<---changed just commented out and compiled everything seams to be working
     }
 
     m_playerLogout = false;
