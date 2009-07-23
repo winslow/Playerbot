@@ -31,6 +31,9 @@ PlayerbotDeathKnightAI::PlayerbotDeathKnightAI(Player* const master, Player* con
    UNHOLY_PRESENCE   = 48265; // presence
    FROST_PRESENCE    = 48263;
    BLOOD_PRESENCE    = 48266;
+   RAISE_DEAD        = ai->getSpellId("raise dead"); // pets (TODO: check for pets exist)
+   SUMMON_GARGOYLE   = 49206;
+   ARMY_OF_THE_DEAD  = 42650;
 }
 
 PlayerbotDeathKnightAI::~PlayerbotDeathKnightAI() {}
@@ -63,57 +66,93 @@ void PlayerbotDeathKnightAI::DoNextCombatManeuver(Unit *pTarget)
        case SPELL_DK_UNHOLY:
 		   if(BONE_SHIELD > 0 && LastSpellUnholyDK < 1)
 			  (!m_bot->HasAura(BONE_SHIELD, 0) && GetAI()->CastSpell (BONE_SHIELD, *m_bot));
+
+		   if (ARMY_OF_THE_DEAD > 0 && ai->GetAttackerCount()>=5 && LastSpellUnholyDK < 2)
+           {
+			   ai->TellMaster("summoning Army of the Dead!");
+               ai->CastSpell(ARMY_OF_THE_DEAD);
+			   if (ARMY_OF_THE_DEAD > 0 && m_bot->HasAura(ARMY_OF_THE_DEAD, 0))
+				   ai->SetIgnoreUpdateTime(7);
+               SpellSequence = SPELL_DK_FROST;
+               LastSpellUnholyDK = LastSpellUnholyDK +1;
+               break;
+           }
 		  
-		   if(UNHOLY_PRESENCE > 0 && LastSpellUnholyDK < 2)
+		   if(UNHOLY_PRESENCE > 0 && LastSpellUnholyDK < 3)
            {
                ai->CastSpell(UNHOLY_PRESENCE, *m_bot);
                SpellSequence = SPELL_DK_FROST;
                LastSpellUnholyDK = LastSpellUnholyDK +1;
                break;
            }
-           else if(PLAGUE_STRIKE > 0 && LastSpellUnholyDK < 3)
+           else if(PLAGUE_STRIKE > 0 && LastSpellUnholyDK < 4)
            {
                ai->CastSpell(PLAGUE_STRIKE, *pTarget);
                SpellSequence = SPELL_DK_FROST;
                LastSpellUnholyDK = LastSpellUnholyDK +1;
                break;
 		   }
-		   else if (DEATH_GRIP > 0 && LastSpellUnholyDK < 4)
+		   else if (DEATH_GRIP > 0 && LastSpellUnholyDK < 5)
            {
                ai->CastSpell(DEATH_GRIP);
                SpellSequence = SPELL_DK_FROST;
                LastSpellUnholyDK = LastSpellUnholyDK +1;
                break;
            }
-           else if (DEATH_COIL > 0 && LastSpellUnholyDK <5 && ai->GetRunicPower() >= 40)
+           else if (DEATH_COIL > 0 && LastSpellUnholyDK <6 && ai->GetRunicPower() >= 40)
            {
                ai->CastSpell(DEATH_COIL);
                SpellSequence = SPELL_DK_FROST;
                LastSpellUnholyDK = LastSpellUnholyDK +1;
                break;
            }
-           else if (DEATH_STRIKE > 0 && LastSpellUnholyDK < 6)
+           else if (DEATH_STRIKE > 0 && !pTarget->HasAura(DEATH_STRIKE, 0) && LastSpellUnholyDK < 7)
            {
                ai->CastSpell(DEATH_STRIKE);
                SpellSequence = SPELL_DK_FROST;
                LastSpellUnholyDK = LastSpellUnholyDK +1;
                break;
            }
-           else if (UNHOLY_BLIGHT > 0 && LastSpellUnholyDK <7 && ai->GetRunicPower() >= 40)
+           else if (UNHOLY_BLIGHT > 0 && !m_bot->HasAura(UNHOLY_BLIGHT, 0) && !pTarget->HasAura(UNHOLY_BLIGHT, 0) && LastSpellUnholyDK < 8 && ai->GetRunicPower() >= 40)
            {
                ai->CastSpell(UNHOLY_BLIGHT);
                SpellSequence = SPELL_DK_FROST;
                LastSpellUnholyDK = LastSpellUnholyDK +1;
                break;
            }
-           else if (SCOURGE_STRIKE > 0 && LastSpellUnholyDK < 8)
+           else if (SCOURGE_STRIKE > 0 && LastSpellUnholyDK < 9)
            {
                ai->CastSpell(SCOURGE_STRIKE);
                SpellSequence = SPELL_DK_FROST;
                LastSpellUnholyDK = LastSpellUnholyDK +1;
                break;
            }
-           else if (LastSpellUnholyDK > 9)
+		   else if (DEATH_AND_DECAY > 0 && ai->GetAttackerCount()>=3 && !pTarget->HasAura(DEATH_AND_DECAY, 0) && LastSpellUnholyDK < 10)
+           {
+               ai->CastSpell(DEATH_AND_DECAY);
+			   ai->SetIgnoreUpdateTime(1);
+               SpellSequence = SPELL_DK_FROST;
+               LastSpellUnholyDK = LastSpellUnholyDK +1;
+               break;
+           }
+		   else if (SUMMON_GARGOYLE > 0 && !m_bot->HasAura(ARMY_OF_THE_DEAD, 0) && LastSpellUnholyDK < 11 && ai->GetRunicPower() >= 50)
+           {
+			   //ai->TellMaster("summoning gargoyle.");
+               ai->CastSpell(SUMMON_GARGOYLE);
+			   ai->SetIgnoreUpdateTime(2);
+               SpellSequence = SPELL_DK_FROST;
+               LastSpellUnholyDK = LastSpellUnholyDK +1;
+               break;
+           }
+           else if (RAISE_DEAD > 0 && !m_bot->HasAura(ARMY_OF_THE_DEAD, 0) && LastSpellUnholyDK < 12)
+           {
+			   //ai->TellMaster("summoning ghoul.");
+               ai->CastSpell(RAISE_DEAD);
+               SpellSequence = SPELL_DK_FROST;
+               LastSpellUnholyDK = LastSpellUnholyDK +1;
+               break;
+           }
+           else if (LastSpellUnholyDK > 13)
            {
                LastSpellUnholyDK = 0;
                SpellSequence = SPELL_DK_FROST;

@@ -121,6 +121,7 @@ void PlayerbotHunterAI::DoNextCombatManeuver(Unit *pTarget)
     {
         m_bot->InterruptNonMeleeSpells( true, AUTO_SHOT );
         //ai->TellMaster( "stopped auto shot." );
+		return;
     }
 
     // damage spells
