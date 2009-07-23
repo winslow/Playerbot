@@ -362,34 +362,6 @@ void PlayerbotMageAI::DoNonCombatActions()
         return;
     }
 
-/*
-    // buff and heal master's group
-    if (GetMaster()->GetGroup())
-    {
-        Group::MemberSlotList const& groupSlot = GetMaster()->GetGroup()->GetMemberSlots();
-        for (Group::member_citerator itr = groupSlot.begin(); itr != groupSlot.end(); itr++)
-        {
-            Player *tPlayer = GetMaster()->GetObjPlayer(itr->guid);
-
-            // first rezz em
-            if (tPlayer->isDead())
-            {
-                std::string msg = "rezzing ";
-                msg += tPlayer->GetName();
-                GetPlayerBot()->Say(msg, LANG_UNIVERSAL);
-                GetAI()->CastSpell(REZZ, *tPlayer);
-                // rez is only 10 sec, but give time for lag
-                GetAI()->SetIgnoreUpdateTime(15);
-            }
-            else
-            {
-                // buff and heal
-                (!tPlayer->HasAura(FORTITUDE,0) && GetAI()->CastSpell (FORTITUDE, *tPlayer));
-                (HealTarget(*tPlayer, tPlayer->GetHealth()*100 / tPlayer->GetMaxHealth()));
-            }
-        }
-    }
-*/
 } // end DoNonCombatActions
 
 void PlayerbotMageAI::BuffPlayer(Player* target)

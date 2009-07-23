@@ -305,15 +305,10 @@ void PlayerbotPaladinAI::DoNonCombatActions()
     // buff myself
     if (GREATER_BLESSING_OF_WISDOM > 0 && !m_bot->HasAura(GREATER_BLESSING_OF_WISDOM, 0))
         GetAI()->CastSpell (GREATER_BLESSING_OF_WISDOM, *m_bot);
-
-    if (BLESSING_OF_MIGHT > 0 && !m_bot->HasAura(BLESSING_OF_MIGHT, 0))
-        GetAI()->CastSpell (BLESSING_OF_MIGHT, *m_bot);
     
 	if (SEAL_OF_WISDOM > 0 && !m_bot->HasAura(SEAL_OF_WISDOM, 0))
 		GetAI()->CastSpell (SEAL_OF_WISDOM, *m_bot);
 
-	if (RIGHTEOUS_FURY > 0 && !m_bot->HasAura(RIGHTEOUS_FURY, 0))
-        GetAI()->CastSpell (RIGHTEOUS_FURY, *m_bot);
 
 
     //Select Class buff seq.
@@ -347,12 +342,6 @@ void PlayerbotPaladinAI::DoNonCombatActions()
         GetAI()->CastSpell (GREATER_BLESSING_OF_WISDOM, *(GetMaster()));
 
     //Warrior
-    if (BLESSING_OF_MIGHT > 0 && GetMaster()->getClass() == CLASS_WARRIOR && !GetMaster()->HasAura(GREATER_BLESSING_OF_MIGHT, 0) && !GetMaster()->HasAura(BLESSING_OF_MIGHT, 0))
-        GetAI()->CastSpell (BLESSING_OF_MIGHT, *(GetMaster()));
-
-    if (GREATER_BLESSING_OF_MIGHT > 0 && GetMaster()->getClass() == CLASS_WARRIOR && !GetMaster()->HasAura(GREATER_BLESSING_OF_MIGHT, 0))
-        GetAI()->CastSpell (GREATER_BLESSING_OF_MIGHT, *(GetMaster()));
-
     if (BLESSING_OF_KINGS > 0 && GetMaster()->getClass() == CLASS_WARRIOR && !GetMaster()->HasAura(GREATER_BLESSING_OF_KINGS, 0) && !GetMaster()->HasAura(BLESSING_OF_KINGS, 0))
         GetAI()->CastSpell (BLESSING_OF_KINGS, *(GetMaster()));
 
