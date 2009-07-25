@@ -271,11 +271,12 @@ bool Creature::UpdateEntry(uint32 Entry, uint32 team, const CreatureData *data )
         setFaction(GetCreatureInfo()->faction_H);
     else
         setFaction(GetCreatureInfo()->faction_A);
-
+//////PlayerbotMod///////////////////////////////////////////////////////////////////////////////////////
     //SetUInt32Value(UNIT_NPC_FLAGS,GetCreatureInfo()->npcflag);
     if(isBotGiver())
         SetUInt32Value(UNIT_NPC_FLAGS, 1);
     else
+//////////////////////////////////////////////////////////////////////////////////////////////////////////
     SetUInt32Value(UNIT_NPC_FLAGS,GetCreatureInfo()->npcflag);
 
     SetAttackTime(BASE_ATTACK,  GetCreatureInfo()->baseattacktime);
@@ -738,9 +739,10 @@ void Creature::prepareGossipMenu( Player *pPlayer,uint32 gossipid )
 
     // lazy loading single time at use
     LoadGossipOptions();
+/////////////////////////playerbotmod////////////////////////////////////////////////////////////////////
     if(isBotGiver())
         LoadBotMenu(pPlayer);
-
+////////////////////////////////////////////////////////////////////////////////////////////////////////
     for( GossipOptionList::iterator i = m_goptions.begin( ); i != m_goptions.end( ); ++i )
     {
         GossipOption* gso=&*i;
@@ -960,8 +962,10 @@ void Creature::OnGossipSelect(Player* player, uint32 option)
             player->GetSession()->SendBattlegGroundList( GetGUID(), bgTypeId );
             break;
         }
+/////////////////////////////////////////playerbotmod///////////////////////////////////////////////
         case GOSSIP_OPTION_BOT:
             break;
+////////////////////////////////////////////////////////////////////////////////////////////////////
         default:
             OnPoiSelect( player, gossip );
             break;
@@ -1541,17 +1545,13 @@ void Creature::setDeathState(DeathState s)
         SetUInt32Value(UNIT_DYNAMIC_FLAGS, 0);
         RemoveFlag (UNIT_FIELD_FLAGS, UNIT_FLAG_SKINNABLE);
 
-        // Playerbot mod
-        AddMonsterMoveFlag(MONSTER_MOVE_WALK);
-        //AddUnitMovementFlag(MOVEMENTFLAG_WALK_MODE);
-        //SetUInt32Value(UNIT_NPC_FLAGS, cinfo->npcflag);
-        if(isBotGiver())
-            SetUInt32Value(UNIT_NPC_FLAGS, 1);
-        else
-        // End Playerbot mod
+/////// Playerbotmod  //////////////////////////////////////////////////////////////////////////////////////////////////
+        if(isBotGiver()) SetUInt32Value(UNIT_NPC_FLAGS, 1);
+        else AddMonsterMoveFlag(MONSTER_MOVE_WALK);
+/////// End Playerbotmod //////////////////////////////////////////////////////////////////////////////////////////////
 
-        //AddUnitMovementFlag(MONSTER_MOVE_WALK);
-        AddMonsterMoveFlag(MONSTER_MOVE_WALK);
+        
+        //AddMonsterMoveFlag(MONSTER_MOVE_WALK);<-------original line
         SetUInt32Value(UNIT_NPC_FLAGS, cinfo->npcflag);
         clearUnitState(UNIT_STAT_ALL_STATE);
         i_motionMaster.Clear();
@@ -2302,6 +2302,7 @@ void Creature::SetActiveObjectState( bool on )
         map->Add(this);
 }
 
+////////////////////////playerbotmod///////////////////////////////////////////////////////////////////////////////
 void Creature::LoadBotMenu(Player *pPlayer)
 {
     uint64 guid = pPlayer->GetGUID();
@@ -2347,7 +2348,7 @@ bool Creature::isBotGiver()
         return true;
     return false;
 }
-
+////////////////////////////////////////////playerbotmod/////////////////////////////////////////////////////////////////
 void Creature::SendMonsterMoveWithSpeedToCurrentDestination(Player* player)
 {
     float x, y, z;

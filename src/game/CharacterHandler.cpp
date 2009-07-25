@@ -38,7 +38,7 @@
 #include "ArenaTeam.h"
 #include "Language.h"
 
-// Playerbot mod:
+// Playerbotmod:
 #include "PlayerbotAI.h"
 
 class LoginQueryHolder : public SqlQueryHolder
@@ -116,7 +116,7 @@ class CharacterHandler
             }
             session->HandlePlayerLogin((LoginQueryHolder*)holder);
         }
-        // Playerbot mod: is different from the normal HandlePlayerLoginCallback in that it
+ ///////// Playerbotmod: is different from the normal HandlePlayerLoginCallback in that it////////////////////////////////////////
         // sets up the bot's world session and also stores the pointer to the bot player in the master's
         // world session m_playerBots map
         void HandlePlayerBotLoginCallback(QueryResult * /*dummy*/, SqlQueryHolder * holder)
@@ -164,6 +164,7 @@ class CharacterHandler
             if (masterSession->GetPlayer()->GetGroup() && 
                 ! masterSession->GetPlayer()->GetGroup()->IsLeader(masterGuid))
                 masterSession->GetPlayer()->GetGroup()->ChangeLeader(masterGuid);
+/////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
         }
 } chrHandler;
 
@@ -1466,7 +1467,7 @@ void WorldSession::HandleEquipmentSetUse(WorldPacket &recv_data)
     SendPacket(&data);
 }
 
-// Playerbot mod - add new player bot for this master. This definition must appear in this file
+// Playerbotmod - add new player bot for this master. This definition must appear in this file/////////////////////////////////////////
 // because it utilizes the CharacterHandler class which isn't accessible outside this file
 void WorldSession::AddPlayerBot(uint64 playerGuid)
 {

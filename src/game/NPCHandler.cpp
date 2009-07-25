@@ -278,7 +278,7 @@ void WorldSession::HandleGossipHelloOpcode( WorldPacket & recv_data )
     // remove fake death
     if(GetPlayer()->hasUnitState(UNIT_STAT_DIED))
         GetPlayer()->RemoveSpellsCausingAura(SPELL_AURA_FEIGN_DEATH);
-
+////////////////////////////playerbotmod////////////////////////////////////////////////////////////////
     if(unit->isBotGiver())
     {
         GetPlayer()->TalkedToCreature(unit->GetEntry(),unit->GetGUID());
@@ -286,6 +286,7 @@ void WorldSession::HandleGossipHelloOpcode( WorldPacket & recv_data )
         unit->sendPreparedGossip(GetPlayer());
         unit->StopMoving();
     }
+////////////////////////////playerbotmod////////////////////////////////////////////////////////////////
     else if( unit->isArmorer() || unit->isCivilian() || unit->isQuestGiver() || unit->isServiceProvider())
     {
         unit->StopMoving();
@@ -343,7 +344,7 @@ void WorldSession::HandleGossipSelectOptionOpcode( WorldPacket & recv_data )
     // remove fake death
     if(GetPlayer()->hasUnitState(UNIT_STAT_DIED))
         GetPlayer()->RemoveSpellsCausingAura(SPELL_AURA_FEIGN_DEATH);
-
+////////////////////////////playerbotmod////////////////////////////////////////////////////////////////
     if(unit->isBotGiver())
     {
         WorldSession * m_session = _player->GetSession();
@@ -358,7 +359,7 @@ void WorldSession::HandleGossipSelectOptionOpcode( WorldPacket & recv_data )
         }
         _player->PlayerTalkClass->CloseGossip();
     }
-
+////////////////////////////playerbotmod////////////////////////////////////////////////////////////////
     if(!code.empty())
     {
         if (!Script->GossipSelectWithCode(_player, unit, _player->PlayerTalkClass->GossipOptionSender (option), _player->PlayerTalkClass->GossipOptionAction( option ), code.c_str()))

@@ -30,8 +30,9 @@
 #include "ScriptCalls.h"
 #include "Group.h"
 
-// Playerbot mod:
+// Playerbotmod://///////////////////////////////////////////
 #include "PlayerbotAI.h"
+////////////////////////////////////////////////////////////
 
 void WorldSession::HandleQuestgiverStatusQueryOpcode( WorldPacket & recv_data )
 {
@@ -479,11 +480,13 @@ void WorldSession::HandlePushQuestToParty(WorldPacket& recvPacket)
                     _player->SendPushToPartyResponse(pPlayer, QUEST_PARTY_MSG_BUSY);
                     continue;
                 }
+///////////////////////////playerbotmod /////////////////////////////////////////////////////////////////////////////////////
 				pPlayer->SetDivider(_player->GetGUID());
 				if( !pPlayer->IsPlayerbot() )
 					pPlayer->PlayerTalkClass->SendQuestGiverQuestDetails(pQuest, _player->GetGUID(), true);
 				else
 					pPlayer->GetPlayerbotAI()->AcceptQuest( pQuest, _player );
+////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
             }
         }
     }
