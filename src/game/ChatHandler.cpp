@@ -37,7 +37,7 @@
 #include "GridNotifiersImpl.h"
 #include "CellImpl.h"
 
-// Playerbot mod
+////////// Playerbotmod //////////////////////
 #include "PlayerbotAI.h"
 
 void WorldSession::HandleMessagechatOpcode( WorldPacket & recv_data )
@@ -216,7 +216,7 @@ void WorldSession::HandleMessagechatOpcode( WorldPacket & recv_data )
                 }
             }
 
-            // Playerbot mod: handle whispered command to bot
+///////////////// Playerbotmod: handle whispered command to bot ///////////////////////////////////
             if (player->GetPlayerbotAI())
             {
                 player->GetPlayerbotAI()->HandleCommand(msg, *GetPlayer());
@@ -224,7 +224,7 @@ void WorldSession::HandleMessagechatOpcode( WorldPacket & recv_data )
                 GetPlayer()->m_speakCount = 0;
             }
             else
-                // END Playerbot mod
+////////////////// END Playerbot mod ////////////////////////////////////////////////////////////
             GetPlayer()->Whisper(msg, lang,player->GetGUID());
         } break;
 
@@ -252,7 +252,7 @@ void WorldSession::HandleMessagechatOpcode( WorldPacket & recv_data )
             if( !group && (!(group = GetPlayer()->GetGroup()) || group->isBGGroup()) )
                 return;
 
-            // Playerbot mod: broadcast message to bot members
+////////////////// Playerbotmod: broadcast message to bot members /////////////////////////////////////////////////////
             for(GroupReference* itr = group->GetFirstMember(); itr != NULL; itr=itr->next())
             {
                 Player* player = itr->getSource();
@@ -263,7 +263,7 @@ void WorldSession::HandleMessagechatOpcode( WorldPacket & recv_data )
                     GetPlayer()->m_speakCount = 0;
                 }
             }
-            // END Playerbot mod
+/////////////////////// END Playerbot mod ///////////////////////////////////////////////////////////////////////
 
             WorldPacket data;
             ChatHandler::FillMessageData(&data, this, CHAT_MSG_PARTY, lang, NULL, 0, msg.c_str(),NULL);
