@@ -2,13 +2,16 @@
 #define _PLAYERBOTAI_H
 
 #include "Common.h"
+#include "QuestDef.h"
 
 class WorldPacket;
+class WorldObject;
 class Player;
 class Unit;
 class Object;
 class Item;
 class PlayerbotClassAI;
+class PlayerbotMgr;
 
 #define BOTLOOT_DISTANCE 25.0f
 
@@ -24,17 +27,23 @@ class MANGOS_DLL_SPEC PlayerbotAI
             SCENARIO_PVPHARD
         };
 
+		enum CombatStyle {
+			COMBAT_MELEE		= 0x01,		// class melee attacker
+			COMBAT_RANGED		= 0x02		// class is ranged attacker
+		};
+
         // masters orders that should be obeyed by the AI during the updteAI routine
         // the master will auto set the target of the bot
         enum CombatOrderType
         {
-            ORDERS_NONE,
-            ORDERS_KILL,
-            ORDERS_CC,
-            ORDERS_HEAL,
-            ORDERS_TANK,
-            ORDERS_PROTECT,
-            ORDERS_REGEN
+            ORDERS_NONE			= 0x00,		// no special orders given
+			ORDERS_TANK			= 0x01,		// bind attackers by gaining threat
+			ORDERS_ASSIST		= 0x02,		// assist someone (dps type)
+			ORDERS_HEAL			= 0x04,		// concentrate on healing (no attacks, only self defense)
+			ORDERS_PROTECT		= 0x10,		// combinable state: check if protectee is attacked
+			ORDERS_PRIMARY		= 0x0F,
+			ORDERS_SECONDARY	= 0xF0,
+			ORDERS_RESET		= 0xFF
         };
 
         enum BotState
@@ -46,6 +55,13 @@ class MANGOS_DLL_SPEC PlayerbotAI
             BOTSTATE_LOOTING        // looting mode, used just after combat
         };
 
+		enum MovementOrderType 
+		{
+			MOVEMENT_NONE		= 0x00,
+			MOVEMENT_FOLLOW		= 0x01,
+			MOVEMENT_STAY		= 0x02
+		};
+
         typedef std::map<uint32, uint32> BotNeedItem;
         typedef std::list<uint64> BotLootCreature;
 
@@ -56,7 +72,7 @@ class MANGOS_DLL_SPEC PlayerbotAI
             AIT_LOWESTTHREAT    = 0x01,
             AIT_HIGHESTTHREAT   = 0x02,
             AIT_VICTIMSELF      = 0x04,
-            AIT_VICTIMNOTSELF   = 0x08
+            AIT_VICTIMNOTSELF   = 0x08		// !!! must use victim param in FindAttackers
         };
         struct AttackerInfo
         {
@@ -70,8 +86,7 @@ class MANGOS_DLL_SPEC PlayerbotAI
         typedef std::map<uint64,AttackerInfo> AttackerInfoList;
 
     public:
-    // ******* Stuff the outside world calls ****************************
-        PlayerbotAI(Player* const master, Player* const bot);
+        PlayerbotAI(PlayerbotMgr* const mgr, Player* const bot);
         virtual ~PlayerbotAI();
 
         // This is called from Unit.cpp and is called every second (I think)
@@ -92,22 +107,10 @@ class MANGOS_DLL_SPEC PlayerbotAI
         // teleportation
         void HandleTeleportAck();
 
-        // This is called whenever the master sends a packet to the server.
-        // These packets can be viewed, but not edited.
-        // It allows bot creators to craft AI in response to a master's actions.
-        // For a list of opcodes that can be caught see Opcodes.cpp (CMSG_* opcodes only)
-        // Notice: that this is static which means it is called once for all bots of the master.
-        static void HandleMasterIncomingPacket(const WorldPacket& packet, WorldSession& masterSession);
-        static void HandleMasterOutgoingPacket(const WorldPacket& packet, WorldSession& masterSession);
-
         // Returns what kind of situation we are in so the ai can react accordingly
         ScenarioType GetScenarioType() {return m_ScenarioType;}
 
         PlayerbotClassAI* GetClassAI() {return m_classAI;}
-
-    //protected:
-
-    // ******* Utilities ***************************************************
 
         // finds spell ID for matching substring args
         // in priority of full text match, spells not taking reagents, and highest rank
@@ -154,27 +157,32 @@ class MANGOS_DLL_SPEC PlayerbotAI
         // ******* Actions ****************************************
         // Your handlers can call these actions to make the bot do things.
         void TellMaster(const std::string& text);
+        void TellMaster( const char *fmt, ... );
         void SendWhisper(const std::string& text, Player& player);
         bool CastSpell(const char* args);
         bool CastSpell(uint32 spellId);
         bool CastSpell(uint32 spellId, Unit& target);
         void UseItem(Item& item);
         void EquipItem(Item& item);
-        void Stay();
-        bool Follow(Player& player);
+        //void Stay();
+        //bool Follow(Player& player);
         void SendNotEquipList(Player& player);
         void Feast();
         void InterruptCurrentCastingSpell();
-        void GetCombatOrders( Unit* forcedTarged = 0 );
+        void GetCombatTarget( Unit* forcedTarged = 0 );
         void DoNextCombatManeuver();
+		void DoCombatMovement();
         void SetIgnoreUpdateTime(uint8 t) {m_ignoreAIUpdatesUntilTime=time(0) + t; };
 
-        Player *GetPlayerBot() {return m_bot;}
+        Player *GetPlayerBot() const {return m_bot;}
+        Player *GetPlayer() const {return m_bot;}
+        Player *GetMaster() const;
 
         BotState GetState() { return m_botState; };
         void SetState( BotState state );
         void SetQuestNeedItems();
         void SendQuestItemList( Player& player );
+		void SendOrders( Player& player );
         bool FollowCheckTeleport( WorldObject &obj );
         void DoLoot();
 
@@ -182,8 +190,17 @@ class MANGOS_DLL_SPEC PlayerbotAI
 
         bool IsInCombat();
         void UpdateAttackerInfo();
-        Unit* FindAttacker( ATTACKERINFOTYPE ait=AIT_NONE );
+        Unit* FindAttacker( ATTACKERINFOTYPE ait=AIT_NONE, Unit *victim=0 );
         uint32 GetAttackerCount() { return m_attackerInfo.size(); };
+		void SetCombatOrderByStr( std::string str, Unit *target=0 );
+		void SetCombatOrder( CombatOrderType co, Unit *target=0 );
+		CombatOrderType GetCombatOrder() { return this->m_combatOrder; }
+		void SetMovementOrder( MovementOrderType mo, Unit *followTarget=0 );
+		MovementOrderType GetMovementOrder() { return this->m_movementOrder; }
+		void MovementReset();
+		void MovementUpdate();
+		void MovementClear();
+		bool IsMoving();
 
         void SetInFront( const Unit* obj );
 
@@ -200,7 +217,7 @@ class MANGOS_DLL_SPEC PlayerbotAI
 
         // it is safe to keep these back reference pointers because m_bot
         // owns the "this" object and m_master owns m_bot. The owner always cleans up.
-        Player* const m_master;
+        PlayerbotMgr* const m_mgr;
         Player* const m_bot;
         PlayerbotClassAI* m_classAI;
 
@@ -208,7 +225,9 @@ class MANGOS_DLL_SPEC PlayerbotAI
         // no need to waste CPU cycles during casting etc
         time_t m_ignoreAIUpdatesUntilTime;
 
+		CombatStyle m_combatStyle;
         CombatOrderType m_combatOrder;
+		MovementOrderType m_movementOrder;
 
         ScenarioType m_ScenarioType;
 
@@ -225,7 +244,7 @@ class MANGOS_DLL_SPEC PlayerbotAI
         time_t m_TimeDoneEating;
         time_t m_TimeDoneDrinking;
         uint32 m_CurrentlyCastingSpellId;
-        bool m_IsFollowingMaster;
+        //bool m_IsFollowingMaster;
 
         // if master commands bot to do something, store here until updateAI
         // can do it
@@ -233,6 +252,16 @@ class MANGOS_DLL_SPEC PlayerbotAI
         uint64 m_targetGuidCommand;
 
         AttackerInfoList m_attackerInfo;
+
+		Unit *m_targetCombat;	// current combat target
+		Unit *m_targetAssist;	// get new target by checking attacker list of assisted player
+		Unit *m_targetProtect;	// check 
+
+		Unit *m_followTarget;	// whom to follow in non combat situation?
+
+        // config variables
+        bool m_confDebugWhisper;
+        float m_confFollowDistance[2];
 };
 
 #endif

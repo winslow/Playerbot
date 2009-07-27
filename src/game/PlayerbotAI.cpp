@@ -1,9 +1,11 @@
 #include "Common.h"
+#include "Config/ConfigEnv.h"
 #include "Database/DatabaseEnv.h"
 #include "ItemPrototype.h"
 #include "World.h"
 #include "SpellMgr.h"
 #include "PlayerbotAI.h"
+#include "PlayerbotMgr.h"
 #include "PlayerbotDeathKnightAI.h"
 #include "PlayerbotDruidAI.h"
 #include "PlayerbotHunterAI.h"
@@ -77,56 +79,84 @@ public:
     bool dropQuest(const char *str) { return HandleQuestRemove(str); }
 };
 
-PlayerbotAI::PlayerbotAI(Player* const master, Player* const bot) :
-    m_master(master), m_bot(bot), m_ignoreAIUpdatesUntilTime(0), m_combatOrder(
-            ORDERS_NONE), m_ScenarioType(SCENARIO_PVEEASY),
-            m_TimeDoneEating(0), m_TimeDoneDrinking(0),
-            m_CurrentlyCastingSpellId(0), m_IsFollowingMaster(true),
-            m_spellIdCommand(0), m_targetGuidCommand(0), m_classAI(0) {
+PlayerbotAI::PlayerbotAI(PlayerbotMgr* const mgr, Player* const bot) :
+    m_mgr(mgr), m_bot(bot), m_ignoreAIUpdatesUntilTime(0),
+    m_combatOrder(ORDERS_NONE), m_ScenarioType(SCENARIO_PVEEASY),
+    m_TimeDoneEating(0), m_TimeDoneDrinking(0),
+    m_CurrentlyCastingSpellId(0), m_spellIdCommand(0), 
+	m_targetGuidCommand(0), m_classAI(0) {
 
     // set bot state and needed item list
     m_botState = BOTSTATE_NORMAL;
     SetQuestNeedItems();
 
+	// reset some pointers
+	m_targetCombat = 0;
+	m_targetAssist = 0;
+	m_targetProtect = 0;
+
+	// start following master (will also teleport bot to master)
+	SetMovementOrder( MOVEMENT_FOLLOW, GetMaster() );
+
     // get class specific ai
     switch (m_bot->getClass())
     {
         case CLASS_PRIEST:
-            m_classAI = (PlayerbotClassAI*) new PlayerbotPriestAI(master, m_bot, this);
+			m_combatStyle = COMBAT_RANGED;
+            m_classAI = (PlayerbotClassAI*) new PlayerbotPriestAI(GetMaster(), m_bot, this);
             break;
         case CLASS_MAGE:
-            m_classAI = (PlayerbotClassAI*) new PlayerbotMageAI(master, m_bot, this);
+			m_combatStyle = COMBAT_RANGED;
+            m_classAI = (PlayerbotClassAI*) new PlayerbotMageAI(GetMaster(), m_bot, this);
             break;
         case CLASS_WARLOCK:
-            m_classAI = (PlayerbotClassAI*) new PlayerbotWarlockAI(master, m_bot, this);
+			m_combatStyle = COMBAT_RANGED;
+            m_classAI = (PlayerbotClassAI*) new PlayerbotWarlockAI(GetMaster(), m_bot, this);
             break;
         case CLASS_WARRIOR:
-            m_classAI = (PlayerbotClassAI*) new PlayerbotWarriorAI(master, m_bot, this);
+			m_combatStyle = COMBAT_MELEE;
+            m_classAI = (PlayerbotClassAI*) new PlayerbotWarriorAI(GetMaster(), m_bot, this);
             break;
         case CLASS_SHAMAN:
-            m_classAI = (PlayerbotClassAI*) new PlayerbotShamanAI(master, m_bot, this);
+			m_combatStyle = COMBAT_MELEE;
+            m_classAI = (PlayerbotClassAI*) new PlayerbotShamanAI(GetMaster(), m_bot, this);
             break;
         case CLASS_PALADIN:
-            m_classAI = (PlayerbotClassAI*) new PlayerbotPaladinAI(master, m_bot, this);
+			m_combatStyle = COMBAT_MELEE;
+            m_classAI = (PlayerbotClassAI*) new PlayerbotPaladinAI(GetMaster(), m_bot, this);
             break;
         case CLASS_ROGUE:
-            m_classAI = (PlayerbotClassAI*) new PlayerbotRogueAI(master, m_bot, this);
+			m_combatStyle = COMBAT_MELEE;
+            m_classAI = (PlayerbotClassAI*) new PlayerbotRogueAI(GetMaster(), m_bot, this);
             break;
         case CLASS_DRUID:
-            m_classAI = (PlayerbotClassAI*) new PlayerbotDruidAI(master, m_bot, this);
+			m_combatStyle = COMBAT_MELEE;
+            m_classAI = (PlayerbotClassAI*) new PlayerbotDruidAI(GetMaster(), m_bot, this);
             break;
         case CLASS_HUNTER:
-            m_classAI = (PlayerbotClassAI*)new PlayerbotHunterAI(master, m_bot, this);
+			m_combatStyle = COMBAT_RANGED;
+            m_classAI = (PlayerbotClassAI*)new PlayerbotHunterAI(GetMaster(), m_bot, this);
             break;
         case CLASS_DEATH_KNIGHT:
-            m_classAI = (PlayerbotClassAI*)new PlayerbotDeathKnightAI(master, m_bot, this);
+			m_combatStyle = COMBAT_MELEE;
+            m_classAI = (PlayerbotClassAI*)new PlayerbotDeathKnightAI(GetMaster(), m_bot, this);
             break;
     }
+
+    // load config variables
+    m_confDebugWhisper = sConfig.GetBoolDefault( "PlayerbotAI.DebugWhisper", false );
+    m_confFollowDistance[0] = sConfig.GetFloatDefault( "PlayerbotAI.FollowDistanceMin", 0.5f );
+    m_confFollowDistance[1] = sConfig.GetFloatDefault( "PlayerbotAI.FollowDistanceMin", 1.0f );
 }
 
 PlayerbotAI::~PlayerbotAI()
 {
     if (m_classAI) delete m_classAI;
+}
+
+Player* PlayerbotAI::GetMaster() const
+{
+    return m_mgr->GetMaster();
 }
 
 // finds spell ID for matching substring args
@@ -145,11 +175,7 @@ uint32 PlayerbotAI::getSpellId(const char* args, bool master) const
     // converting string that we try to find to lower case
     wstrToLower(wnamepart);
 
-    int loc = 0;
-    if (master)
-        loc = m_master->GetSession()->GetSessionDbcLocale();
-    else
-        loc = m_bot->GetSession()->GetSessionDbcLocale();
+    const int loc = GetMaster()->GetSession()->GetSessionDbcLocale();
 
     uint32 foundSpellId = 0;
     bool foundExactMatch = false;
@@ -268,7 +294,7 @@ void PlayerbotAI::SendNotEquipList(Player& player)
     }
 
     TellMaster("Here's all the items in my inventory that I can equip.");
-    ChatHandler ch(m_master);
+    ChatHandler ch(GetMaster());
 
     const std::string descr[] = { "head", "neck", "shoulders", "body", "chest",
             "waist", "legs", "feet", "wrists", "hands", "finger1", "finger2",
@@ -319,373 +345,50 @@ void PlayerbotAI::SendQuestItemList( Player& player )
     TellMaster( out.str().c_str() );
 }
 
-void PlayerbotAI::HandleMasterOutgoingPacket(const WorldPacket& packet, WorldSession& masterSession)
+void PlayerbotAI::SendOrders( Player& player )
 {
-	/**
-    switch (packet.GetOpcode())
-    {
-        // maybe our bots should only start looting after the master loots?
-        //case SMSG_LOOT_RELEASE_RESPONSE: {} 
-        case SMSG_NAME_QUERY_RESPONSE:
-        case SMSG_MONSTER_MOVE:
-        case SMSG_COMPRESSED_UPDATE_OBJECT:
-        case SMSG_DESTROY_OBJECT:
-        case SMSG_UPDATE_OBJECT:
-        case SMSG_STANDSTATE_UPDATE:
-        case MSG_MOVE_HEARTBEAT:
-        case SMSG_QUERY_TIME_RESPONSE:
-        case SMSG_AURA_UPDATE_ALL:
-        case SMSG_CREATURE_QUERY_RESPONSE:
-        case SMSG_GAMEOBJECT_QUERY_RESPONSE:
-            return;
-        default:
-        {
-            const char* oc = LookupOpcodeName(packet.GetOpcode());
-
-            std::ostringstream out;
-            out << "masterout: " << oc;
-            sLog.outError(out.str().c_str());
-        }
-    }
-	 */
-}
-
-void PlayerbotAI::HandleMasterIncomingPacket(const WorldPacket& packet, WorldSession& masterSession)
-{
-    switch (packet.GetOpcode())
-    {
+	std::ostringstream out;
+	
+	if( !m_combatOrder )
+		out << "Got no combat orders!";
+	else if( m_combatOrder&ORDERS_TANK )
+		out << "I TANK";
+	else if( m_combatOrder&ORDERS_ASSIST )
+		out << "I ASSIST " << (m_targetAssist?m_targetAssist->GetName():"unknown");
+	else if( m_combatOrder&ORDERS_HEAL )
+		out << "I HEAL";
+	if( (m_combatOrder&ORDERS_PRIMARY) && (m_combatOrder&ORDERS_SECONDARY) )
+		out << " and ";
+	if( m_combatOrder&ORDERS_PROTECT )
+		out << "I PROTECT " << (m_targetProtect?m_targetProtect->GetName():"unknown");
+    out << ".";
     
-        // If master inspects one of his bots, give the master useful info in chat window
-        // such as inventory that can be equipped
-        case CMSG_INSPECT:
-        {
-            WorldPacket p(packet);
-            p.rpos(0); // reset reader
-            uint64 guid;
-            p >> guid;
-            Player* const bot = masterSession.GetPlayerBot(guid);
-            if (!bot)
-                return;
-            bot->GetPlayerbotAI()->SendNotEquipList(*bot);
-        }
-
-        // handle emotes from the master
-        //case CMSG_EMOTE:
-        case CMSG_TEXT_EMOTE:
-        {
-            WorldPacket p(packet);
-            p.rpos(0); // reset reader
-            uint32 emoteNum;
-            p >> emoteNum;
-
-            /* std::ostringstream out;
-            out << "emote is: " << emoteNum;
-            ChatHandler ch(masterSession.GetPlayer());
-            ch.SendSysMessage(out.str().c_str()); */
-
-            switch (emoteNum)
-            {
-                case TEXTEMOTE_BOW:
-                {
-                    // Buff anyone who bows before me. Useful for players not in bot's group
-                    // How do I get correct target???
-                    //Player* const pPlayer = masterSession.GetPlayerBot(masterSession.GetPlayer()->GetSelection());
-                    //if (pPlayer->GetPlayerbotAI()->GetClassAI())
-                    //    pPlayer->GetPlayerbotAI()->GetClassAI()->BuffPlayer(pPlayer);
-                    return;
-                }
-
-                case TEXTEMOTE_BONK:
-                {
-                    Player* const pPlayer = masterSession.GetPlayerBot(masterSession.GetPlayer()->GetSelection());
-                    if (!pPlayer || !pPlayer->GetPlayerbotAI())
-                        return;
-                    PlayerbotAI* const pBot = pPlayer->GetPlayerbotAI();
-
-                    ChatHandler ch(masterSession.GetPlayer());
-                    {
-                        std::ostringstream out;
-                        out << "time(0): " << time(0)
-                            << " m_ignoreAIUpdatesUntilTime: " << pBot->m_ignoreAIUpdatesUntilTime;
-                        ch.SendSysMessage(out.str().c_str());
-                    }
-                    {
-                        std::ostringstream out;
-                        out << "m_TimeDoneEating: " << pBot->m_TimeDoneEating
-                            << " m_TimeDoneDrinking: " << pBot->m_TimeDoneDrinking;
-                        ch.SendSysMessage(out.str().c_str());
-                    }
-                    {
-                        std::ostringstream out;
-                        out << "m_CurrentlyCastingSpellId: " << pBot->m_CurrentlyCastingSpellId;
-                        ch.SendSysMessage(out.str().c_str());
-                    }
-                    {
-                        std::ostringstream out;
-                        out << "m_IsFollowingMaster: " << pBot->m_IsFollowingMaster;
-                        ch.SendSysMessage(out.str().c_str());
-                    }
-                    {
-                        std::ostringstream out;
-                        out << "IsBeingTeleported() " << pBot->m_bot->IsBeingTeleported();
-                        ch.SendSysMessage(out.str().c_str());
-                    }
-                    {
-                        std::ostringstream out;
-                        bool tradeActive = (pBot->m_bot->GetTrader()) ? true : false;
-                        out << "tradeActive: " << tradeActive;
-                        ch.SendSysMessage(out.str().c_str());
-                    }
-                    {
-                        std::ostringstream out;
-                        out << "IsCharmed() " << pBot->m_bot->isCharmed();
-                        ch.SendSysMessage(out.str().c_str());
-                    }
-                    return;
-                }
-
-                case TEXTEMOTE_EAT:
-                case TEXTEMOTE_DRINK:
-                {
-                    for (PlayerBotMap::const_iterator it = masterSession.GetPlayerBotsBegin(); it != masterSession.GetPlayerBotsEnd(); ++it)
-                    {
-                        Player* const bot = it->second;
-                        bot->GetPlayerbotAI()->Feast();
-                    }
-                    return;
-                }
-
-                // emote to stay
-                case TEXTEMOTE_STAND:
-                {
-                    Player* const bot = masterSession.GetPlayerBot(masterSession.GetPlayer()->GetSelection());
-                    if (bot)
-                        bot->GetPlayerbotAI()->Stay();
-                    else
-                    {
-                        for (PlayerBotMap::const_iterator it = masterSession.GetPlayerBotsBegin(); it != masterSession.GetPlayerBotsEnd(); ++it)
-                        {
-                            Player* const bot = it->second;
-                            bot->GetPlayerbotAI()->Stay();
-                        }
-                    }
-                    return;
-                }
-
-                // 324 is the followme emote (not defined in enum)
-                // if master has bot selected then only bot follows, else all bots follow
-                case 324:
-                case TEXTEMOTE_WAVE:
-                {
-                    Player* const bot = masterSession.GetPlayerBot(masterSession.GetPlayer()->GetSelection());
-                    if (bot)
-                        bot->GetPlayerbotAI()->Follow(*masterSession.GetPlayer());
-                    else
-                    {
-                        for (PlayerBotMap::const_iterator it = masterSession.GetPlayerBotsBegin(); it != masterSession.GetPlayerBotsEnd(); ++it)
-                        {
-                            Player* const bot = it->second;
-                            bot->GetPlayerbotAI()->Follow(*masterSession.GetPlayer());
-                        }
-                    }
-                    return;
-                }
-            }
-        } /* EMOTE ends here */
-
-        // if master talks to an NPC
-        case CMSG_SET_SELECTION:
-        //case CMSG_GOSSIP_HELLO:
-        //case CMSG_QUESTGIVER_HELLO:
-        {
-        	WorldPacket p(packet);
-        	p.rpos(0); // reset reader
-        	uint64 npcGUID;
-        	p >> npcGUID;
-        	
-        	Object* const pNpc = ObjectAccessor::GetObjectByTypeMask(*masterSession.GetPlayer(), npcGUID, TYPEMASK_UNIT|TYPEMASK_GAMEOBJECT);
-        	if (!pNpc)
-        		return;
-
-        	// for all master's bots
-        	for (PlayerBotMap::const_iterator it = masterSession.GetPlayerBotsBegin(); it != masterSession.GetPlayerBotsEnd(); ++it)
-        	{
-
-        		Player* const bot = it->second;
-        		if (!bot->IsInMap((WorldObject*) pNpc))
-        			bot->GetPlayerbotAI()->TellMaster("hey you are turning in quests without me!");
-        		else
-        		{
-        			bot->SetSelection(npcGUID);
-        			
-        			// auto complete every completed quest this NPC has
-        			bot->PrepareQuestMenu(npcGUID);
-        			QuestMenu& questMenu = bot->PlayerTalkClass->GetQuestMenu();
-        			for (uint32 iI = 0; iI < questMenu.MenuItemCount(); ++iI)
-        			{
-        				QuestMenuItem const& qItem = questMenu.GetItem(iI);
-        				uint32 questID = qItem.m_qId;
-        				Quest const* pQuest = objmgr.GetQuestTemplate(questID);
-
-        				std::ostringstream out;
-        				std::string questTitle  = pQuest->GetTitle();
-        				bot->GetPlayerbotAI()->QuestLocalization(questTitle, questID);
-        				
-        		        QuestStatus status = bot->GetQuestStatus(questID);
-        		        
-        		        // if quest is complete, turn it in
-        		        if (status == QUEST_STATUS_COMPLETE)
-        		        {
-        		        	// if bot hasn't already turned quest in
-        		        	if (! bot->GetQuestRewardStatus(questID))
-        		        	{
-        		        		// auto reward quest if no choice in reward
-        		        		if (pQuest->GetRewChoiceItemsCount() == 0)
-        		        		{
-									if (bot->CanRewardQuest(pQuest, false))
-									{
-										bot->RewardQuest(pQuest, 0, pNpc, false);
-										out << "Quest complete: |cff808080|Hquest:" << questID << ':' << pQuest->GetQuestLevel() << "|h[" << questTitle << "]|h|r";
-									}
-									else
-									{
-										out << "|cffff0000Unable to turn quest in:|r |cff808080|Hquest:" << questID << ':' << pQuest->GetQuestLevel() << "|h[" << questTitle << "]|h|r";
-									}
-        		        		}
-        		        		
-        		        		// auto reward quest if one item as reward
-        		        		else if (pQuest->GetRewChoiceItemsCount() == 1)
-        		        		{
-        		        			int rewardIdx = 0;
-        		        			ItemPrototype const *pRewardItem = objmgr.GetItemPrototype(pQuest->RewChoiceItemId[rewardIdx]);
-									std::string itemName = pRewardItem->Name1;
-									bot->GetPlayerbotAI()->ItemLocalization(itemName, pRewardItem->ItemId);
-									if (bot->CanRewardQuest(pQuest, rewardIdx, false))
-									{
-										bot->RewardQuest(pQuest, rewardIdx, pNpc, true);
-
-										std::string itemName = pRewardItem->Name1;
-										bot->GetPlayerbotAI()->ItemLocalization(itemName, pRewardItem->ItemId);
-
-										out << "Quest complete: "
-											<< " |cff808080|Hquest:" << questID << ':' << pQuest->GetQuestLevel() 
-											<< "|h[" << questTitle << "]|h|r reward: |cffffffff|Hitem:" 
-											<< pRewardItem->ItemId << ":0:0:0:0:0:0:0" << "|h[" << itemName << "]|h|r";
-									}
-									else
-									{
-										out << "|cffff0000Unable to turn quest in:|r "
-											<< "|cff808080|Hquest:" << questID << ':' 
-											<< pQuest->GetQuestLevel() << "|h[" << questTitle << "]|h|r"
-											<< " reward: |cffffffff|Hitem:" 
-											<< pRewardItem->ItemId << ":0:0:0:0:0:0:0" << "|h[" << itemName << "]|h|r";
-									}
-        		        		}
-        		        		
-        		        		// else multiple rewards - let master pick
-        		        		else {
-        		        			out << "What reward should I take for |cff808080|Hquest:" << questID << ':' << pQuest->GetQuestLevel() 
-										<< "|h[" << questTitle << "]|h|r? ";
-        		        			for (uint8 i=0; i < pQuest->GetRewChoiceItemsCount(); ++i)
-									{
-										ItemPrototype const * const pRewardItem = objmgr.GetItemPrototype(pQuest->RewChoiceItemId[i]);
-										std::string itemName = pRewardItem->Name1;
-										bot->GetPlayerbotAI()->ItemLocalization(itemName, pRewardItem->ItemId);
-										out << "|cffffffff|Hitem:" << pRewardItem->ItemId << ":0:0:0:0:0:0:0" << "|h[" << itemName << "]|h|r";
-									}
-        		        		}
-        		        	}
-        		        }
-        		        
-        		        else if (status == QUEST_STATUS_INCOMPLETE) {
-							out << "|cffff0000Quest incomplete:|r " 
-								<< " |cff808080|Hquest:" << questID << ':' << pQuest->GetQuestLevel() << "|h[" << questTitle << "]|h|r";
-        		        }
-        		        
-        		        else if (status == QUEST_STATUS_AVAILABLE){
-							out << "|cff00ff00Quest available:|r " 
-								<< " |cff808080|Hquest:" << questID << ':' << pQuest->GetQuestLevel() << "|h[" << questTitle << "]|h|r";
-        		        }
-
-        				if (! out.str().empty())
-        					bot->GetPlayerbotAI()->TellMaster(out.str());
-        			}
-        		}
-        	}
-        	        
-        	return;
-        }
-
-        // if master accepts a quest, bots should also try to accept quest
-        case CMSG_QUESTGIVER_ACCEPT_QUEST:
-        {
-            WorldPacket p(packet);
-            p.rpos(0); // reset reader
-            uint64 guid;
-            uint32 quest;
-            p >> guid >> quest;
-            Quest const* qInfo = objmgr.GetQuestTemplate(quest);
-            if (qInfo)
-            {
-                for (PlayerBotMap::const_iterator it = masterSession.GetPlayerBotsBegin(); it != masterSession.GetPlayerBotsEnd(); ++it)
-                {
-                    Player* const bot = it->second;
-                    
-                    if (bot->GetQuestStatus(quest) == QUEST_STATUS_COMPLETE)
-                        bot->GetPlayerbotAI()->TellMaster("I already completed that quest.");
-                    else if (! bot->CanTakeQuest(qInfo, false))
-                    {                    	
-        				if (! bot->SatisfyQuestStatus(qInfo, false))
-                            bot->GetPlayerbotAI()->TellMaster("I already have that quest.");
-                        else
-                            bot->GetPlayerbotAI()->TellMaster("I can't take that quest.");
-                    }
-                    else if (! bot->SatisfyQuestLog(false))
-                        bot->GetPlayerbotAI()->TellMaster("My quest log is full.");
-                    else if (! bot->CanAddQuest(qInfo, false))
-                        bot->GetPlayerbotAI()->TellMaster("I can't take that quest because it requires that I take items, but my bags are full!");
-
-                    else
-                    {
-                        p.rpos(0); // reset reader
-                        bot->GetSession()->HandleQuestgiverAcceptQuestOpcode(p);
-                        bot->GetPlayerbotAI()->TellMaster("Got the quest.");
-                    }
-                }
-            }
-            return;
-        }
-/*
-        case CMSG_NAME_QUERY:
-        case MSG_MOVE_START_FORWARD:
-        case MSG_MOVE_STOP:
-        case MSG_MOVE_SET_FACING:
-        case MSG_MOVE_START_STRAFE_LEFT:
-        case MSG_MOVE_START_STRAFE_RIGHT:
-        case MSG_MOVE_STOP_STRAFE:
-        case MSG_MOVE_START_BACKWARD:
-        case MSG_MOVE_HEARTBEAT:
-        case CMSG_STANDSTATECHANGE:
-        case CMSG_QUERY_TIME:
-        case CMSG_CREATURE_QUERY:
-        case CMSG_GAMEOBJECT_QUERY:
-        case MSG_MOVE_JUMP:
-        case MSG_MOVE_FALL_LAND:
-            return;
-
-        default:
-        {
-            const char* oc = LookupOpcodeName(packet.GetOpcode());
-            // ChatHandler ch(masterSession.GetPlayer());
-            // ch.SendSysMessage(oc);
-
-            std::ostringstream out;
-            out << "masterin: " << oc;
-            sLog.outError(out.str().c_str());
-        }
-        */
-
+    if( m_confDebugWhisper )
+    {
+	    out << " " << (IsInCombat()?"I'm in COMBAT! ":"Not in combat. ");
+        out << "Current state is ";
+        if( m_botState == BOTSTATE_NORMAL )
+            out << "NORMAL";
+        else if( m_botState == BOTSTATE_COMBAT )
+            out << "COMBAT";
+        else if( m_botState == BOTSTATE_DEAD )
+            out << "DEAD";
+        else if( m_botState == BOTSTATE_DEADRELEASED )
+            out << "RELEASED";
+        else if( m_botState == BOTSTATE_LOOTING )
+            out << "LOOTING";
+        out << ". Movement order is ";
+        if( m_movementOrder == MOVEMENT_NONE )
+            out << "NONE";
+        else if( m_movementOrder == MOVEMENT_FOLLOW )
+            out << "FOLLOW " << (m_followTarget?m_followTarget->GetName():"unknown");
+        else if( m_movementOrder == MOVEMENT_STAY )
+            out << "STAY";
+        out << ". Got " << m_attackerInfo.size() << " attacker(s) in list.";
+        out << " Next action in " << (m_ignoreAIUpdatesUntilTime-time(0)) << "sec.";
     }
+
+	TellMaster( out.str().c_str() );
 }
 
 // handle outgoing packets the server would send to the client
@@ -701,7 +404,6 @@ void PlayerbotAI::HandleBotOutgoingPacket(const WorldPacket& packet)
         case SMSG_DUEL_COMPLETE:
         {
             m_ignoreAIUpdatesUntilTime = time(0) + 4;
-            m_combatOrder = ORDERS_NONE;
             m_ScenarioType = SCENARIO_PVEEASY;
             m_bot->GetMotionMaster()->Clear(true);
             return;
@@ -736,7 +438,6 @@ void PlayerbotAI::HandleBotOutgoingPacket(const WorldPacket& packet)
 
                 m_bot->SetSelection(playerGuid);
                 m_ignoreAIUpdatesUntilTime = time(0) + 4;
-                m_combatOrder = ORDERS_KILL;
                 m_ScenarioType = SCENARIO_DUEL;
             }
             return;
@@ -769,15 +470,15 @@ void PlayerbotAI::HandleBotOutgoingPacket(const WorldPacket& packet)
         {
             WorldPacket p(packet);
             uint64 guid = extractGuid(p);
-            if (guid != m_master->GetGUID())
+            if (guid != GetMaster()->GetGUID())
                 return;
-            if (m_master->IsMounted() && !m_bot->IsMounted())
+            if (GetMaster()->IsMounted() && !m_bot->IsMounted())
             {
                 Item* const pItem = m_bot->GetPlayerbotAI()->FindMount(300);
                 if (pItem)
                     m_bot->GetPlayerbotAI()->UseItem(*pItem);
             }
-            else if (!m_master->IsMounted() && m_bot->IsMounted())
+            else if (!GetMaster()->IsMounted() && m_bot->IsMounted())
             {
                 WorldPacket emptyPacket;
                 m_bot->GetSession()->HandleCancelMountAuraOpcode(emptyPacket);  //updated code
@@ -792,9 +493,8 @@ void PlayerbotAI::HandleBotOutgoingPacket(const WorldPacket& packet)
             uint64 guid = extractGuid(p);
             if (guid != m_bot->GetGUID())
                 return;
-            m_bot->m_movementInfo.AddMovementFlag(MOVEMENTFLAG_FLYING2);
-            //m_bot->AddUnitMovementFlag(MOVEMENTFLAG_FLYING2);
-            //m_bot->SetSpeed(MOVE_RUN, m_master->GetSpeed(MOVE_FLIGHT) +0.1f, true);
+			m_bot->m_movementInfo.AddMovementFlag(MOVEMENTFLAG_FLYING2);
+            //m_bot->SetSpeed(MOVE_RUN, GetMaster()->GetSpeed(MOVE_FLIGHT) +0.1f, true);
             return;
         }
 
@@ -805,12 +505,10 @@ void PlayerbotAI::HandleBotOutgoingPacket(const WorldPacket& packet)
             uint64 guid = extractGuid(p);
             if (guid != m_bot->GetGUID())
                 return;
-            m_bot->m_movementInfo.RemoveMovementFlag(MOVEMENTFLAG_FLYING2);
-            //m_bot->RemoveUnitMovementFlag(MOVEMENTFLAG_FLYING2);
-            //m_bot->SetSpeed(MOVE_RUN,m_master->GetSpeedRate(MOVE_RUN),true);
+			m_bot->m_movementInfo.RemoveMovementFlag(MOVEMENTFLAG_FLYING2);
+            //m_bot->SetSpeed(MOVE_RUN,GetMaster()->GetSpeedRate(MOVE_RUN),true);
             return;
         }
-        
 
         // If the leader role was given to the bot automatically give it to the master
         // if the master is in the group, otherwise leave group
@@ -821,10 +519,10 @@ void PlayerbotAI::HandleBotOutgoingPacket(const WorldPacket& packet)
             p >> name;
             if (m_bot->GetGroup() && name == m_bot->GetName())
             {
-                if (m_bot->GetGroup()->IsMember(m_master->GetGUID()))
+                if (m_bot->GetGroup()->IsMember(GetMaster()->GetGUID()))
                 {
                     p.resize(8);
-                    p << m_master->GetGUID();
+                    p << GetMaster()->GetGUID();
                     m_bot->GetSession()->HandleGroupSetLeaderOpcode(p);
                 }
                 else
@@ -849,7 +547,7 @@ void PlayerbotAI::HandleBotOutgoingPacket(const WorldPacket& packet)
             p.clear();
             if (operation == PARTY_OP_LEAVE)
             {
-                if (member == m_master->GetName())
+                if (member == GetMaster()->GetName())
                     m_bot->GetSession()->HandleGroupDisbandOpcode(p); // packet not used updated code
             }
             return;
@@ -872,7 +570,7 @@ void PlayerbotAI::HandleBotOutgoingPacket(const WorldPacket& packet)
                 if (!canObeyCommandFrom(*inviter))
                 {
                     std::string buf = "I can't accept your invite unless you first invite my master ";
-                    buf += m_master->GetName();
+                    buf += GetMaster()->GetName();
                     buf += ".";
                     SendWhisper(buf, *inviter);
                     m_bot->GetSession()->HandleGroupDeclineOpcode(p); // packet not used
@@ -1384,7 +1082,7 @@ Item* PlayerbotAI::FindPoison() const
 
 void PlayerbotAI::InterruptCurrentCastingSpell()
 {
-    TellMaster("I'm interrupting my current spell!");
+    //TellMaster("I'm interrupting my current spell!");
     WorldPacket* const packet = new WorldPacket(CMSG_CANCEL_CAST, 5);  //changed from thetourist suggestion
     *packet << m_CurrentlyCastingSpellId;
     *packet << m_targetGuidCommand;   //changed from thetourist suggestion
@@ -1444,7 +1142,7 @@ void PlayerbotAI::Feast()
 
 // intelligently sets a reasonable combat order for this bot
 // based on its class / level / etc
-void PlayerbotAI::GetCombatOrders( Unit* forcedTarget )
+void PlayerbotAI::GetCombatTarget( Unit* forcedTarget )
 {
     // set combat state, and clear looting, etc...
     if( m_botState != BOTSTATE_COMBAT )
@@ -1453,84 +1151,113 @@ void PlayerbotAI::GetCombatOrders( Unit* forcedTarget )
         SetQuestNeedItems();
         m_lootCreature.clear();
         m_lootCurrent = 0;
+		m_targetCombat = 0;
     }
 
     // update attacker info now
     UpdateAttackerInfo();
 
-    //Unit* thingToAttack = m_master->getAttackerForHelper();
-    Unit *thingToAttack = ( !forcedTarget ? FindAttacker() : forcedTarget );
-    if (!thingToAttack)
+	// check for attackers on protected unit, and make it a forcedTarget if any
+	if( !forcedTarget && (m_combatOrder&ORDERS_PROTECT) && m_targetProtect!=0 )
+    {
+		Unit *newTarget = FindAttacker( (ATTACKERINFOTYPE)(AIT_VICTIMNOTSELF|AIT_HIGHESTTHREAT), m_targetProtect );
+        if( newTarget && newTarget!=m_targetCombat )
+        {
+            forcedTarget = newTarget;
+            if( m_confDebugWhisper )
+                TellMaster( "Changing target to %s to protect %s", forcedTarget->GetName(), m_targetProtect->GetName() );
+        }
+    }
+
+	// we already have a target and we are not forced to change it
+	if( m_targetCombat && !forcedTarget )
+		return;
+
+	// are we forced on a target?
+	if( forcedTarget )
+		m_targetCombat = forcedTarget;
+	// do we have to assist someone?
+	if( !m_targetCombat && (m_combatOrder&ORDERS_ASSIST) && m_targetAssist!=0 )
+    {
+		m_targetCombat = FindAttacker( (ATTACKERINFOTYPE)(AIT_VICTIMNOTSELF|AIT_LOWESTTHREAT), m_targetAssist );
+        if( m_confDebugWhisper && m_targetCombat )
+            TellMaster( "Attacking to %s to assist %s", m_targetCombat->GetName(), m_targetAssist->GetName() );
+    }
+	// are there any other attackers?
+	if( !m_targetCombat )
+		m_targetCombat = FindAttacker();
+	// no attacker found anyway
+    if (!m_targetCombat)
         return;
 
     // if thing to attack is in a duel, then ignore and don't call updateAI for 6 seconds
     // this method never gets called when the bot is in a duel and this code
     // prevents bot from helping
-    if (thingToAttack->GetTypeId() == TYPEID_PLAYER && dynamic_cast<Player*> (thingToAttack)->duel)
+    if (m_targetCombat->GetTypeId() == TYPEID_PLAYER && dynamic_cast<Player*> (m_targetCombat)->duel)
     {
         m_ignoreAIUpdatesUntilTime = time(0) + 6;
         return;
     }
 
-    m_bot->SetSelection(thingToAttack->GetGUID());
+    m_bot->SetSelection(m_targetCombat->GetGUID());
     m_ignoreAIUpdatesUntilTime = time(0) + 1;
-    m_combatOrder = ORDERS_KILL;
 
     if (m_bot->getStandState() != UNIT_STAND_STATE_STAND)
         m_bot->SetStandState(UNIT_STAND_STATE_STAND);
 
-    m_bot->Attack(thingToAttack, true);
-
-    m_bot->GetMotionMaster()->Clear(true);
-    m_bot->clearUnitState(UNIT_STAT_CHASE);
-    m_bot->clearUnitState(UNIT_STAT_FOLLOW);
+    m_bot->Attack(m_targetCombat, true);
 
     // add thingToAttack to loot list
-    m_lootCreature.push_back( thingToAttack->GetGUID() );
+    m_lootCreature.push_back( m_targetCombat->GetGUID() );
 
-    // follow target in casting range - I commented out the priest & mage classes because of strange behavior - feel free to experiment
-    switch (m_bot->getClass())
-    {
-        case CLASS_PRIEST:
-            break;
-        case CLASS_SHAMAN:
-            break;
-        case CLASS_WARLOCK:
-        case CLASS_HUNTER:
-        //case CLASS_DRUID:
-        case CLASS_MAGE:
-        {
-            float dist = rand_float(8, 12);
-            m_bot->GetMotionMaster()->MoveChase(thingToAttack,dist,m_bot->GetAngle(thingToAttack));
-            break;
-        }
-        default:
-            m_bot->GetMotionMaster()->MoveChase(thingToAttack);
-    }
-
+	// set movement generators for combat movement
+	MovementClear();
     return;
 }
 
 void PlayerbotAI::DoNextCombatManeuver()
 {
-    Unit* const pTarget = ObjectAccessor::GetUnit(*m_bot, m_bot->GetSelection());
+	GetCombatTarget();
+	DoCombatMovement();
 
-    // if current order doesn't make sense anymore
+	// check if we have a target - fixes crash reported by rrtn (kill hunter's pet bug)
+	if( !m_targetCombat ) return;
+
+	// if current target for attacks doesn't make sense anymore
     // clear our orders so we can get orders in next update
-    if (!pTarget || pTarget->isDead() || !pTarget->IsInWorld() || !m_bot->IsHostileTo(pTarget))
+    if( m_targetCombat->isDead() || !m_targetCombat->IsInWorld() || !m_bot->IsHostileTo(m_targetCombat) )
     {
-        m_combatOrder = ORDERS_NONE;
         m_bot->SetSelection(0);
         m_bot->GetMotionMaster()->Clear(true);
         m_bot->InterruptNonMeleeSpells(true);
+		m_targetCombat = 0;
         return;
     }
 
-    // update attacker info now
-    UpdateAttackerInfo();
-
     if (GetClassAI())
-        (GetClassAI())->DoNextCombatManeuver(pTarget);
+        (GetClassAI())->DoNextCombatManeuver( m_targetCombat );
+}
+
+void PlayerbotAI::DoCombatMovement() {
+	if( !m_targetCombat ) return;
+
+	float targetDist = m_bot->GetDistance( m_targetCombat );
+
+	if( m_combatStyle==COMBAT_MELEE && !m_bot->hasUnitState( UNIT_STAT_CHASE ) && ( (m_movementOrder==MOVEMENT_STAY && targetDist<=ATTACK_DISTANCE) || (m_movementOrder!=MOVEMENT_STAY) ) ) 
+	{
+		// melee combat - chase target if in range or if we are not forced to stay
+		m_bot->GetMotionMaster()->MoveChase( m_targetCombat );
+	} 
+	else if( m_combatStyle==COMBAT_RANGED && m_movementOrder!=MOVEMENT_STAY ) 
+	{
+		// ranged combat - just move within spell range
+		// TODO: just follow in spell range! how to determine bots spell range?
+		if( targetDist>25.0f ) {
+			m_bot->GetMotionMaster()->MoveChase( m_targetCombat );
+		} else {
+			MovementClear();
+		}
+	}
 }
 
 void PlayerbotAI::SetQuestNeedItems()
@@ -1584,7 +1311,7 @@ void PlayerbotAI::DoLoot()
         m_lootCreature.pop_front();
         Creature *c = m_bot->GetMap()->GetCreature( m_lootCurrent );
         // check if we got a creature and if it is still a corpse, otherwise bot runs to spawn point
-        if( !c || c->getDeathState()!=CORPSE || m_master->GetDistance( c )>BOTLOOT_DISTANCE )
+        if( !c || c->getDeathState()!=CORPSE || GetMaster()->GetDistance( c )>BOTLOOT_DISTANCE )
         {
             m_lootCurrent = 0;
             return;
@@ -1595,7 +1322,7 @@ void PlayerbotAI::DoLoot()
     else
     {
         Creature *c = m_bot->GetMap()->GetCreature( m_lootCurrent );
-        if( !c || c->getDeathState()!=CORPSE || m_master->GetDistance( c )>BOTLOOT_DISTANCE )
+        if( !c || c->getDeathState()!=CORPSE || GetMaster()->GetDistance( c )>BOTLOOT_DISTANCE )
         {
             m_lootCurrent = 0;
             return;
@@ -1721,7 +1448,7 @@ bool PlayerbotAI::IsInCombat()
 {
     bool inCombat = false;
     inCombat |= m_bot->isInCombat();
-    inCombat |= m_master->isInCombat();
+    inCombat |= GetMaster()->isInCombat();
     if( m_bot->GetGroup() )
     {
         GroupReference *ref = m_bot->GetGroup()->GetFirstMember();
@@ -1754,7 +1481,7 @@ void PlayerbotAI::UpdateAttackerInfo()
     }
 
     // check master's attackers
-    ref = m_master->getHostilRefManager().getFirst();
+    ref = GetMaster()->getHostilRefManager().getFirst();
     while( ref )
     {
         ThreatManager *target = ref->getSource();
@@ -1777,7 +1504,7 @@ void PlayerbotAI::UpdateAttackerInfo()
         GroupReference *gref = m_bot->GetGroup()->GetFirstMember();
         while( gref )
         {
-            if( gref->getSource() == m_bot || gref->getSource() == m_master )
+            if( gref->getSource() == m_bot || gref->getSource() == GetMaster() )
             {
                 gref = gref->next();
                 continue;
@@ -1832,7 +1559,7 @@ void PlayerbotAI::UpdateAttackerInfo()
     //sLog.outBasic( "[PlayerbotAI]: };" );
 }
 
-Unit *PlayerbotAI::FindAttacker( ATTACKERINFOTYPE ait )
+Unit *PlayerbotAI::FindAttacker( ATTACKERINFOTYPE ait, Unit *victim )
 {
     // list empty? why are we here?
     if( m_attackerInfo.empty() )
@@ -1853,6 +1580,9 @@ Unit *PlayerbotAI::FindAttacker( ATTACKERINFOTYPE ait )
         if( !(ait & AIT_VICTIMSELF) && (ait & AIT_VICTIMNOTSELF) && itr->second.victim == m_bot )
             continue;
 
+		if( (ait & AIT_VICTIMNOTSELF) && victim && itr->second.victim != victim )
+            continue;
+
         if( !(ait & (AIT_LOWESTTHREAT|AIT_HIGHESTTHREAT)) )
         {
             a = itr->second.attacker;
@@ -1860,12 +1590,12 @@ Unit *PlayerbotAI::FindAttacker( ATTACKERINFOTYPE ait )
         }
         else
         {
-            if( (ait & AIT_HIGHESTTHREAT) && (itr->second.victim==m_bot) && itr->second.threat>t )
+            if( (ait & AIT_HIGHESTTHREAT) && /*(itr->second.victim==m_bot) &&*/ itr->second.threat>=t )
             {
                 t = itr->second.threat;
                 a = itr->second.attacker;
             }
-            else if( (ait & AIT_LOWESTTHREAT) && (itr->second.victim==m_bot) && itr->second.threat<t )
+            else if( (ait & AIT_LOWESTTHREAT) && /*(itr->second.victim==m_bot) &&*/ itr->second.threat<=t )
             {
                 t = itr->second.threat;
                 a = itr->second.attacker;
@@ -1875,13 +1605,108 @@ Unit *PlayerbotAI::FindAttacker( ATTACKERINFOTYPE ait )
     return a;
 }
 
+void PlayerbotAI::SetCombatOrderByStr( std::string str, Unit *target ) {
+	CombatOrderType co;
+	if( str == "tank" ) co = ORDERS_TANK;
+	else if( str == "assist" ) co = ORDERS_ASSIST;
+	else if( str == "heal" ) co = ORDERS_HEAL;
+	else if( str == "protect" ) co = ORDERS_PROTECT;
+	else co = ORDERS_RESET;
+	SetCombatOrder( co, target );
+}
+
+void PlayerbotAI::SetCombatOrder( CombatOrderType co, Unit *target ) {
+	if( (co == ORDERS_ASSIST || co == ORDERS_PROTECT) && !target )
+		return;
+	if( co == ORDERS_RESET ) {
+		m_combatOrder = ORDERS_NONE;
+		m_targetAssist = 0;
+		m_targetProtect = 0;
+		return;
+	}
+	if( co == ORDERS_PROTECT ) 
+		m_targetProtect = target;
+	else if( co == ORDERS_ASSIST ) 
+		m_targetAssist = target;
+	if( (co&ORDERS_PRIMARY) )
+		m_combatOrder = (CombatOrderType)(((uint32)m_combatOrder&(uint32)ORDERS_SECONDARY)|(uint32)co);
+	else
+		m_combatOrder = (CombatOrderType)(((uint32)m_combatOrder&(uint32)ORDERS_PRIMARY)|(uint32)co);
+}
+
+void PlayerbotAI::SetMovementOrder( MovementOrderType mo, Unit *followTarget ) {
+	m_movementOrder = mo;
+	m_followTarget = followTarget;
+	MovementReset();
+}
+
+void PlayerbotAI::MovementReset() {
+	// stop moving...
+	MovementClear();
+
+	if( m_movementOrder == MOVEMENT_FOLLOW ) 
+    {
+		if( !m_followTarget ) return;
+
+		// target player is teleporting...
+		if( m_followTarget->GetTypeId()==TYPEID_PLAYER && ((Player*)m_followTarget)->IsBeingTeleported() )
+			return;
+
+		// check if bot needs to teleport to reach target...
+        if( !m_bot->isInCombat() )
+        {
+		    if( m_followTarget->GetTypeId()==TYPEID_PLAYER && ((Player*)m_followTarget)->GetCorpse() )
+            {
+			    if( !FollowCheckTeleport( *((Player*)m_followTarget)->GetCorpse() ) ) return;
+            }
+		    else
+            {
+			    if( !FollowCheckTeleport( *m_followTarget ) ) return;
+            }
+        }
+
+        if( m_bot->isAlive() )
+        {
+			float angle = rand_float(0, M_PI);
+		    float dist = rand_float( m_confFollowDistance[0], m_confFollowDistance[1] );
+			m_bot->GetMotionMaster()->MoveFollow( m_followTarget, dist, angle );
+        }
+	}
+}
+
+void PlayerbotAI::MovementUpdate() 
+{
+	// send heartbeats to world
+	WorldPacket data;
+	m_bot->BuildHeartBeatMsg( &data );
+	m_bot->SendMessageToSet( &data, false );
+
+    // call set position (updates states, exploration, etc.)
+    m_bot->SetPosition( m_bot->GetPositionX(), m_bot->GetPositionY(), m_bot->GetPositionZ(), m_bot->GetOrientation(), false );
+}
+
+void PlayerbotAI::MovementClear() 
+{
+    // stop...
+    m_bot->GetMotionMaster()->Clear( true );
+    m_bot->clearUnitState( UNIT_STAT_CHASE );
+    m_bot->clearUnitState( UNIT_STAT_FOLLOW );
+
+	// stand up...
+    if (!m_bot->IsStandState())
+        m_bot->SetStandState(UNIT_STAND_STATE_STAND);
+}
+
+bool PlayerbotAI::IsMoving() 
+{
+	return (m_bot->GetMotionMaster()->GetCurrentMovementGeneratorType() == IDLE_MOTION_TYPE ? false : true);
+}
+
 void PlayerbotAI::SetInFront( const Unit* obj )
 {
+	// removed SendUpdateToPlayer (is not updating movement/orientation)
     if( !m_bot->HasInArc( M_PI, obj ) )
-    {
         m_bot->SetInFront( obj );
-        m_bot->SendUpdateToPlayer( m_master );
-    }
 }
 
 // some possible things to use in AI
@@ -1905,6 +1730,9 @@ void PlayerbotAI::UpdateAI(const uint32 p_time)
     // default updates occur every two seconds
     m_ignoreAIUpdatesUntilTime = time(0) + 2;
 
+	// send heartbeat
+	MovementUpdate();
+
     if( !m_bot->isAlive() )
     {
         if( m_botState != BOTSTATE_DEAD && m_botState != BOTSTATE_DEADRELEASED )
@@ -1914,7 +1742,6 @@ void PlayerbotAI::UpdateAI(const uint32 p_time)
             m_lootCreature.clear();
             m_lootCurrent = 0;
             // clear combat orders
-            m_combatOrder = ORDERS_NONE;
             m_bot->SetSelection(0);
             m_bot->GetMotionMaster()->Clear(true);
             // set state to dead
@@ -1965,7 +1792,7 @@ void PlayerbotAI::UpdateAI(const uint32 p_time)
             // resurrect now
             //sLog.outDebug( "[PlayerbotAI]: Reviving %s to corpse...", m_bot->GetName() );
             m_ignoreAIUpdatesUntilTime = time(0) + 6;
-            PlayerbotChatHandler ch(m_master);
+            PlayerbotChatHandler ch(GetMaster());
             if (! ch.revive(*m_bot))
             {
                 ch.sysmessage(".. could not be revived ..");
@@ -1994,16 +1821,15 @@ void PlayerbotAI::UpdateAI(const uint32 p_time)
         }
 
         // handle combat
-        else if (m_combatOrder != ORDERS_NONE)
-            DoNextCombatManeuver();
-
-        // check for combat and get combat orders
         else if ( IsInCombat() )
-            GetCombatOrders();
+            DoNextCombatManeuver();
 
         // bot was in combat recently - loot now
         else if (m_botState == BOTSTATE_COMBAT)
+        {
             SetState( BOTSTATE_LOOTING );
+            m_attackerInfo.clear();
+        }
         else if (m_botState == BOTSTATE_LOOTING)
             DoLoot();
 /*
@@ -2012,8 +1838,8 @@ void PlayerbotAI::UpdateAI(const uint32 p_time)
         Feast();
 */
         // if commanded to follow master and not already following master then follow master
-        else if (!m_bot->isInCombat() && m_IsFollowingMaster && m_bot->GetMotionMaster()->GetCurrentMovementGeneratorType() == IDLE_MOTION_TYPE)
-            Follow(*m_master);
+        else if (!m_bot->isInCombat() && !IsMoving() )
+            MovementReset();
 
         // do class specific non combat actions
         else if (GetClassAI())
@@ -2032,7 +1858,18 @@ Spell* PlayerbotAI::GetCurrentSpell() const
 
 void PlayerbotAI::TellMaster(const std::string& text)
 {
-    SendWhisper(text, *m_master);
+    SendWhisper(text, *GetMaster());
+}
+
+void PlayerbotAI::TellMaster( const char *fmt, ... )
+{
+    char temp_buf[1024];
+    va_list ap;
+    va_start( ap, fmt );
+    size_t temp_len = vsnprintf( temp_buf, 1024, fmt, ap );
+    va_end( ap );
+    std::string str = temp_buf;
+    TellMaster( str );
 }
 
 void PlayerbotAI::SendWhisper(const std::string& text, Player& player)
@@ -2044,7 +1881,7 @@ void PlayerbotAI::SendWhisper(const std::string& text, Player& player)
 
 bool PlayerbotAI::canObeyCommandFrom(const Player& player) const
 {
-    return player.GetSession()->GetAccountId() == m_master->GetSession()->GetAccountId();
+    return player.GetSession()->GetAccountId() == GetMaster()->GetSession()->GetAccountId();
 }
 
 bool PlayerbotAI::CastSpell(const char* args)
@@ -2320,16 +2157,16 @@ bool PlayerbotAI::TradeCopper(uint32 copper)
     return false;
 }
 
-void PlayerbotAI::Stay()
+/*void PlayerbotAI::Stay()
 {
     m_IsFollowingMaster = false;
     m_bot->GetMotionMaster()->Clear(true);
     m_bot->HandleEmoteCommand(EMOTE_ONESHOT_SALUTE);
-}
+}*/
 
-bool PlayerbotAI::Follow(Player& player)
+/*bool PlayerbotAI::Follow(Player& player)
 {
-    if (m_master->IsBeingTeleported())
+    if (GetMaster()->IsBeingTeleported())
         return false;
 
     m_IsFollowingMaster = true;
@@ -2361,15 +2198,16 @@ bool PlayerbotAI::Follow(Player& player)
         return true;
     }
     return false;
-}
+}*/
 
 bool PlayerbotAI::FollowCheckTeleport( WorldObject &obj )
 {
     // if bot has strayed too far from the master, teleport bot
-    if (! m_bot->IsInMap(&obj) || ! m_bot->IsInRange(&obj, 0, 50))
+	
+    if (!m_bot->IsWithinDistInMap( &obj, 50, true ))
     {
         m_ignoreAIUpdatesUntilTime = time(0) + 6;
-        PlayerbotChatHandler ch(m_master);
+        PlayerbotChatHandler ch(GetMaster());
         if (! ch.teleport(*m_bot))
         {
             ch.sysmessage(".. could not be teleported ..");
@@ -2399,7 +2237,7 @@ void PlayerbotAI::HandleTeleportAck()
 // Localization support
 void PlayerbotAI::ItemLocalization(std::string& itemName, const uint32 itemID) const
 {
-    int loc = m_master->GetSession()->GetSessionDbLocaleIndex();
+    int loc = GetMaster()->GetSession()->GetSessionDbLocaleIndex();
     std::wstring wnamepart;
 
     ItemLocale const *pItemInfo = objmgr.GetItemLocale(itemID);
@@ -2416,7 +2254,7 @@ void PlayerbotAI::ItemLocalization(std::string& itemName, const uint32 itemID) c
 
 void PlayerbotAI::QuestLocalization(std::string& questTitle, const uint32 questID) const
 {
-    int loc = m_master->GetSession()->GetSessionDbLocaleIndex();
+    int loc = GetMaster()->GetSession()->GetSessionDbLocaleIndex();
     std::wstring wnamepart;
 
     QuestLocale const *pQuestInfo = objmgr.GetQuestLocale(questID);
@@ -2446,7 +2284,7 @@ void PlayerbotAI::HandleCommand(const std::string& text, Player& fromPlayer)
     if (!canObeyCommandFrom(fromPlayer))
     {
         std::string msg = "I can't talk to you. Please speak to my master ";
-        msg += m_master->GetName();
+        msg += GetMaster()->GetName();
         SendWhisper(msg, fromPlayer);
         m_bot->HandleEmoteCommand(EMOTE_ONESHOT_NO);
     }
@@ -2476,17 +2314,26 @@ void PlayerbotAI::HandleCommand(const std::string& text, Player& fromPlayer)
     else if (text == "reset")
     {
         SetState( BOTSTATE_NORMAL );
+		MovementReset();
         SetQuestNeedItems();
-        m_combatOrder = ORDERS_NONE;
+		UpdateAttackerInfo();
         m_lootCreature.clear();
         m_lootCurrent = 0;
+		m_targetCombat = 0;
+		// do we want to reset all states on this command?
+//		m_combatOrder = ORDERS_NONE;
+//		m_targetCombat = 0;
+//		m_targetAssisst = 0;
+//		m_targetProtect = 0;
     }
     else if (text == "report")
-        SendQuestItemList( *m_master );
+        SendQuestItemList( *GetMaster() );
+    else if (text == "orders")
+        SendOrders( *GetMaster() );
     else if (text == "follow" || text == "come")
-        Follow(*m_master);
+        SetMovementOrder( MOVEMENT_FOLLOW, GetMaster() );
     else if (text == "stay" || text == "stop")
-        Stay();
+        SetMovementOrder( MOVEMENT_STAY );
     else if (text == "attack")
     {
         uint64 attackOnGuid = fromPlayer.GetSelection();
@@ -2494,15 +2341,7 @@ void PlayerbotAI::HandleCommand(const std::string& text, Player& fromPlayer)
         {
             Unit* thingToAttack = ObjectAccessor::GetUnit(*m_bot, attackOnGuid);
             if (!m_bot->IsFriendlyTo(thingToAttack) && m_bot->IsWithinLOSInMap(thingToAttack))
-            {
-                /*m_bot->GetMotionMaster()->Clear(true);
-                m_combatOrder = ORDERS_KILL;
-                m_bot->SetSelection(thingToAttack->GetGUID());
-                m_bot->Attack(thingToAttack, true);
-                m_bot->GetMotionMaster()->MoveChase(thingToAttack);
-                m_ignoreAIUpdatesUntilTime = time(0) + 6;*/
-                GetCombatOrders( thingToAttack );
-            }
+                GetCombatTarget( thingToAttack );
         }
         else
         {
@@ -2590,7 +2429,7 @@ void PlayerbotAI::HandleCommand(const std::string& text, Player& fromPlayer)
 			oldSelectionGUID = m_bot->GetGUID();
 			fromPlayer.SetSelection(m_bot->GetGUID());
 		}
-		PlayerbotChatHandler ch(m_master);
+		PlayerbotChatHandler ch(GetMaster());
 		if (! ch.dropQuest(text.substr(5).c_str()))
 			ch.sysmessage("ERROR: could not drop quest");
 		if (oldSelectionGUID)
@@ -2602,7 +2441,7 @@ void PlayerbotAI::HandleCommand(const std::string& text, Player& fromPlayer)
     else if (text == "spells")
     {
 
-        int loc = m_master->GetSession()->GetSessionDbcLocale();
+        int loc = GetMaster()->GetSession()->GetSessionDbcLocale();
 
         std::ostringstream posOut;
         std::ostringstream negOut;

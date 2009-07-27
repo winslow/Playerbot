@@ -298,16 +298,17 @@ void PlayerbotPaladinAI::DoNextCombatManeuver(Unit *pTarget)
 
 void PlayerbotPaladinAI::DoNonCombatActions()
 {
+    PlayerbotAI* ai = GetAI();
     Player * m_bot = GetPlayerBot();
     if (!m_bot)
         return;
 
     // buff myself
     if (GREATER_BLESSING_OF_WISDOM > 0 && !m_bot->HasAura(GREATER_BLESSING_OF_WISDOM, 0))
-        GetAI()->CastSpell (GREATER_BLESSING_OF_WISDOM, *m_bot);
+        ai->CastSpell (GREATER_BLESSING_OF_WISDOM, *m_bot);
     
 	if (SEAL_OF_WISDOM > 0 && !m_bot->HasAura(SEAL_OF_WISDOM, 0))
-		GetAI()->CastSpell (SEAL_OF_WISDOM, *m_bot);
+		ai->CastSpell (SEAL_OF_WISDOM, *m_bot);
 
 
 
@@ -315,78 +316,78 @@ void PlayerbotPaladinAI::DoNonCombatActions()
     ///Process Who is my master --> get the player class --> aura already present if not then proced --> cast the spell
     //Priest
     if (BLESSING_OF_WISDOM > 0 && GetMaster()->getClass() == CLASS_PRIEST && !GetMaster()->HasAura(GREATER_BLESSING_OF_WISDOM, 0) && !GetMaster()->HasAura(BLESSING_OF_WISDOM, 0))
-        GetAI()->CastSpell (BLESSING_OF_WISDOM, *(GetMaster()));
+        ai->CastSpell (BLESSING_OF_WISDOM, *(GetMaster()));
 
     if (GREATER_BLESSING_OF_WISDOM > 0 && GetMaster()->getClass() == CLASS_PRIEST && !GetMaster()->HasAura(GREATER_BLESSING_OF_WISDOM, 0))
-        GetAI()->CastSpell (GREATER_BLESSING_OF_WISDOM, *(GetMaster()));
+        ai->CastSpell (GREATER_BLESSING_OF_WISDOM, *(GetMaster()));
 
     //Mage
     if (BLESSING_OF_WISDOM > 0 && GetMaster()->getClass() == CLASS_MAGE && !GetMaster()->HasAura(GREATER_BLESSING_OF_WISDOM, 0) && !GetMaster()->HasAura(BLESSING_OF_WISDOM, 0))
-        GetAI()->CastSpell (BLESSING_OF_WISDOM, *(GetMaster()));
+        ai->CastSpell (BLESSING_OF_WISDOM, *(GetMaster()));
 
     if (GREATER_BLESSING_OF_WISDOM > 0 && GetMaster()->getClass() == CLASS_MAGE && !GetMaster()->HasAura(GREATER_BLESSING_OF_WISDOM, 0))
-        GetAI()->CastSpell (GREATER_BLESSING_OF_WISDOM, *(GetMaster()));
+        ai->CastSpell (GREATER_BLESSING_OF_WISDOM, *(GetMaster()));
 
     //Paladin
     if (BLESSING_OF_WISDOM > 0 && GetMaster()->getClass() == CLASS_PALADIN && !GetMaster()->HasAura(GREATER_BLESSING_OF_WISDOM, 0) && !GetMaster()->HasAura(BLESSING_OF_WISDOM, 0))
-        GetAI()->CastSpell (BLESSING_OF_WISDOM, *(GetMaster()));
+        ai->CastSpell (BLESSING_OF_WISDOM, *(GetMaster()));
 
     if (GREATER_BLESSING_OF_WISDOM > 0 && GetMaster()->getClass() == CLASS_PALADIN && !GetMaster()->HasAura(GREATER_BLESSING_OF_WISDOM, 0))
-        GetAI()->CastSpell (GREATER_BLESSING_OF_WISDOM, *(GetMaster()));
+        ai->CastSpell (GREATER_BLESSING_OF_WISDOM, *(GetMaster()));
 
     //Warlock
     if (BLESSING_OF_WISDOM > 0 && GetMaster()->getClass() == CLASS_WARLOCK && !GetMaster()->HasAura(GREATER_BLESSING_OF_WISDOM, 0) && !GetMaster()->HasAura(BLESSING_OF_WISDOM, 0))
-        GetAI()->CastSpell (BLESSING_OF_WISDOM, *(GetMaster()));
+        ai->CastSpell (BLESSING_OF_WISDOM, *(GetMaster()));
 
     if (GREATER_BLESSING_OF_WISDOM > 0 && GetMaster()->getClass() == CLASS_WARLOCK && !GetMaster()->HasAura(GREATER_BLESSING_OF_WISDOM, 0))
-        GetAI()->CastSpell (GREATER_BLESSING_OF_WISDOM, *(GetMaster()));
+        ai->CastSpell (GREATER_BLESSING_OF_WISDOM, *(GetMaster()));
 
     //Warrior
     if (BLESSING_OF_KINGS > 0 && GetMaster()->getClass() == CLASS_WARRIOR && !GetMaster()->HasAura(GREATER_BLESSING_OF_KINGS, 0) && !GetMaster()->HasAura(BLESSING_OF_KINGS, 0))
-        GetAI()->CastSpell (BLESSING_OF_KINGS, *(GetMaster()));
+        ai->CastSpell (BLESSING_OF_KINGS, *(GetMaster()));
 
     if (GREATER_BLESSING_OF_KINGS > 0 && GetMaster()->getClass() == CLASS_WARRIOR && !GetMaster()->HasAura(GREATER_BLESSING_OF_KINGS, 0))
-        GetAI()->CastSpell (GREATER_BLESSING_OF_KINGS, *(GetMaster()));
+        ai->CastSpell (GREATER_BLESSING_OF_KINGS, *(GetMaster()));
 
     //Rogue
     if (BLESSING_OF_MIGHT > 0 && GetMaster()->getClass() == CLASS_ROGUE && !GetMaster()->HasAura(GREATER_BLESSING_OF_MIGHT, 0) && !GetMaster()->HasAura(BLESSING_OF_MIGHT, 0))
-        GetAI()->CastSpell (BLESSING_OF_MIGHT, *(GetMaster()));
+        ai->CastSpell (BLESSING_OF_MIGHT, *(GetMaster()));
 
     if (GREATER_BLESSING_OF_MIGHT > 0 && GetMaster()->getClass() == CLASS_ROGUE && !GetMaster()->HasAura(GREATER_BLESSING_OF_MIGHT, 0))
-        GetAI()->CastSpell (GREATER_BLESSING_OF_MIGHT, *(GetMaster()));
+        ai->CastSpell (GREATER_BLESSING_OF_MIGHT, *(GetMaster()));
 
     //Shaman
     if (BLESSING_OF_MIGHT > 0 && GetMaster()->getClass() == CLASS_SHAMAN && !GetMaster()->HasAura(GREATER_BLESSING_OF_MIGHT, 0) && !GetMaster()->HasAura(BLESSING_OF_WISDOM, 0))
-        GetAI()->CastSpell (BLESSING_OF_WISDOM, *(GetMaster()));
+        ai->CastSpell (BLESSING_OF_WISDOM, *(GetMaster()));
 
     if (GREATER_BLESSING_OF_MIGHT > 0 && GetMaster()->getClass() == CLASS_SHAMAN && !GetMaster()->HasAura(GREATER_BLESSING_OF_WISDOM, 0))
-        GetAI()->CastSpell (GREATER_BLESSING_OF_WISDOM, *(GetMaster()));
+        ai->CastSpell (GREATER_BLESSING_OF_WISDOM, *(GetMaster()));
 
 	//DEATH KNIGHT
     if (BLESSING_OF_KINGS > 0 && GetMaster()->getClass() == CLASS_DEATH_KNIGHT && !GetMaster()->HasAura(GREATER_BLESSING_OF_KINGS, 0) && !GetMaster()->HasAura(BLESSING_OF_KINGS, 0))
-        GetAI()->CastSpell (BLESSING_OF_KINGS, *(GetMaster()));
+        ai->CastSpell (BLESSING_OF_KINGS, *(GetMaster()));
 
     if (GREATER_BLESSING_OF_KINGS > 0 && GetMaster()->getClass() == CLASS_DEATH_KNIGHT && !GetMaster()->HasAura(GREATER_BLESSING_OF_KINGS, 0))
-        GetAI()->CastSpell (GREATER_BLESSING_OF_KINGS, *(GetMaster()));
+        ai->CastSpell (GREATER_BLESSING_OF_KINGS, *(GetMaster()));
 
 	//DRUID
     if (BLESSING_OF_KINGS > 0 && GetMaster()->getClass() == CLASS_DRUID && !GetMaster()->HasAura(GREATER_BLESSING_OF_KINGS, 0) && !GetMaster()->HasAura(BLESSING_OF_KINGS, 0))
-        GetAI()->CastSpell (BLESSING_OF_KINGS, *(GetMaster()));
+        ai->CastSpell (BLESSING_OF_KINGS, *(GetMaster()));
 
     if (GREATER_BLESSING_OF_KINGS > 0 && GetMaster()->getClass() == CLASS_DRUID && !GetMaster()->HasAura(GREATER_BLESSING_OF_KINGS, 0))
-        GetAI()->CastSpell (GREATER_BLESSING_OF_KINGS, *(GetMaster()));
+        ai->CastSpell (GREATER_BLESSING_OF_KINGS, *(GetMaster()));
     
     // mana check
     if (m_bot->getStandState() != UNIT_STAND_STATE_STAND)
         m_bot->SetStandState(UNIT_STAND_STATE_STAND);
 
-    Item* pItem = GetAI()->FindDrink();
+    Item* pItem = ai->FindDrink();
 
-    if (pItem != NULL && GetAI()->GetManaPercent() < 40)
+    if (pItem != NULL && ai->GetManaPercent() < 40)
     {
-        GetAI()->TellMaster("I could use a drink.");
-        GetAI()->UseItem(*pItem);
-        GetAI()->SetIgnoreUpdateTime(30);
+        ai->TellMaster("I could use a drink.");
+        ai->UseItem(*pItem);
+        ai->SetIgnoreUpdateTime(30);
         return;
     }
 
@@ -394,13 +395,13 @@ void PlayerbotPaladinAI::DoNonCombatActions()
     if (m_bot->getStandState() != UNIT_STAND_STATE_STAND)
         m_bot->SetStandState(UNIT_STAND_STATE_STAND);
 
-    pItem = GetAI()->FindFood();
+    pItem = ai->FindFood();
 
-    if (pItem != NULL && GetAI()->GetHealthPercent() < 80)
+    if (pItem != NULL && ai->GetHealthPercent() < 40)
     {
-        GetAI()->TellMaster("I could use some food.");
-        GetAI()->UseItem(*pItem);
-        GetAI()->SetIgnoreUpdateTime(30);
+        ai->TellMaster("I could use some food.");
+        ai->UseItem(*pItem);
+        ai->SetIgnoreUpdateTime(30);
         return;
     }
 
@@ -415,14 +416,14 @@ void PlayerbotPaladinAI::DoNonCombatActions()
                 continue;
 
 	       // first rezz em
-           if ( !tPlayer->isAlive() && !tPlayer->IsPlayerbot() )
+           if ( !tPlayer->isAlive() && !tPlayer->GetPlayerbotAI() )
            {
               std::string msg = "rezzing ";
               msg += tPlayer->GetName();
               GetPlayerBot()->Say(msg, LANG_UNIVERSAL);
-              GetAI()->CastSpell(REDEMPTION, *tPlayer);
+              ai->CastSpell(REDEMPTION, *tPlayer);
               // rez is only 10 sec, but give time for lag
-              GetAI()->SetIgnoreUpdateTime(17);
+              ai->SetIgnoreUpdateTime(17);
            }
            else if( tPlayer->isAlive() )
            {

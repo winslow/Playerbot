@@ -126,7 +126,7 @@ void PlayerbotPriestAI::DoNextCombatManeuver(Unit *pTarget)
 
     // ------- Non Duel combat ----------
 
-    ai->Follow(*GetMaster()); // dont want to melee mob
+    ai->SetMovementOrder( PlayerbotAI::MOVEMENT_FOLLOW, GetMaster() ); // dont want to melee mob
 
     Player *m_bot = GetPlayerBot();
     Group *m_group = m_bot->GetGroup();
@@ -353,6 +353,7 @@ void PlayerbotPriestAI::DoNextCombatManeuver(Unit *pTarget)
 
 void PlayerbotPriestAI::DoNonCombatActions()
 {
+    PlayerbotAI* ai = GetAI();
     Player * m_bot = GetPlayerBot();
     if (!m_bot)
         return;
@@ -361,29 +362,29 @@ void PlayerbotPriestAI::DoNonCombatActions()
 
     // buff myself
     if (FORTITUDE > 0)
-        (!m_bot->HasAura(FORTITUDE, 0) && GetAI()->CastSpell (FORTITUDE, *m_bot));
+        (!m_bot->HasAura(FORTITUDE, 0) && ai->CastSpell (FORTITUDE, *m_bot));
 
     if (INNER_FIRE > 0)
-        (!m_bot->HasAura(INNER_FIRE, 0) && GetAI()->CastSpell (INNER_FIRE, *m_bot));
+        (!m_bot->HasAura(INNER_FIRE, 0) && ai->CastSpell (INNER_FIRE, *m_bot));
 
     if (TOUCH_OF_WEAKNESS > 0)
-        (m_bot->getRace()==5 /* undead */ && GetAI()->CastSpell (TOUCH_OF_WEAKNESS, *m_bot));
+        (m_bot->getRace()==5 /* undead */ && ai->CastSpell (TOUCH_OF_WEAKNESS, *m_bot));
 
     // buff master
     if (FORTITUDE > 0)
-        (!GetMaster()->HasAura(FORTITUDE,0) && GetAI()->CastSpell (FORTITUDE, *(GetMaster())) );
+        (!GetMaster()->HasAura(FORTITUDE,0) && ai->CastSpell (FORTITUDE, *(GetMaster())) );
 
     // mana check
     if (m_bot->getStandState() != UNIT_STAND_STATE_STAND)
         m_bot->SetStandState(UNIT_STAND_STATE_STAND);
 
-    Item* pItem = GetAI()->FindDrink();
+    Item* pItem = ai->FindDrink();
 
-    if (pItem != NULL && GetAI()->GetManaPercent() < 30)
+    if (pItem != NULL && ai->GetManaPercent() < 30)
     {
-        GetAI()->TellMaster("I could use a drink.");
-        GetAI()->UseItem(*pItem);
-        GetAI()->SetIgnoreUpdateTime(30);
+        ai->TellMaster("I could use a drink.");
+        ai->UseItem(*pItem);
+        ai->SetIgnoreUpdateTime(30);
         return;
     }
 
@@ -391,17 +392,15 @@ void PlayerbotPriestAI::DoNonCombatActions()
     if (m_bot->getStandState() != UNIT_STAND_STATE_STAND)
         m_bot->SetStandState(UNIT_STAND_STATE_STAND);
 
-    pItem = GetAI()->FindFood();
+    pItem = ai->FindFood();
 
-    if (pItem != NULL && GetAI()->GetHealthPercent() < 30)
+    if (pItem != NULL && ai->GetHealthPercent() < 30)
     {
-        GetAI()->TellMaster("I could use some food.");
-        GetAI()->UseItem(*pItem);
-        GetAI()->SetIgnoreUpdateTime(30);
+        ai->TellMaster("I could use some food.");
+        ai->UseItem(*pItem);
+        ai->SetIgnoreUpdateTime(30);
         return;
     }
-
-    //(!GetMaster()->HasAura(FORTITUDE,0) && GetAI()->CastSpell (FORTITUDE, *(GetMaster())) );
 
     // buff and heal master's group
     if (GetMaster()->GetGroup())
@@ -414,19 +413,19 @@ void PlayerbotPriestAI::DoNonCombatActions()
                 continue;
 
             // first rezz em
-            if ( !tPlayer->isAlive() && !tPlayer->IsPlayerbot() )
+            if ( !tPlayer->isAlive() && !tPlayer->GetPlayerbotAI() )
             {
                 std::string msg = "rezzing ";
                 msg += tPlayer->GetName();
                 GetPlayerBot()->Say(msg, LANG_UNIVERSAL);
-                GetAI()->CastSpell(REZZ, *tPlayer);
+                ai->CastSpell(REZZ, *tPlayer);
                 // rez is only 10 sec, but give time for lag
-                GetAI()->SetIgnoreUpdateTime(17);
+                ai->SetIgnoreUpdateTime(17);
             }
             else if( tPlayer->isAlive() )
             {
                 // buff and heal
-                (!tPlayer->HasAura(FORTITUDE,0) && GetAI()->CastSpell (FORTITUDE, *tPlayer));
+                (!tPlayer->HasAura(FORTITUDE,0) && ai->CastSpell (FORTITUDE, *tPlayer));
                 (HealTarget(*tPlayer, tPlayer->GetHealth()*100 / tPlayer->GetMaxHealth()));
             }
         }

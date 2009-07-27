@@ -61,6 +61,7 @@
 
 // Playerbotmod:
 #include "PlayerbotAI.h"
+#include "PlayerbotMgr.h"
 
 #include <cmath>
 
@@ -276,7 +277,8 @@ Player::Player (WorldSession *session): Unit(), m_achievementMgr(this), m_reputa
     m_transport = 0;
 
 ///// Playerbotmod//////////////////////////////////////////////////////////////////
-    m_playerbotAI = NULL;
+    m_playerbotAI = 0;
+    m_playerbotMgr = 0;
 ////////////////////////////////////////////////////////////////////////////////////
     m_speakTime = 0;
     m_speakCount = 0;
@@ -518,9 +520,13 @@ Player::~Player ()
     delete m_runes;
 
 /////// Playerbotmod remove AI if exists////////////////////////////////////////////////////////////////////////
-    if (m_playerbotAI != NULL) {
+    if (m_playerbotAI) {
         delete m_playerbotAI;
-        m_playerbotAI = NULL;
+        m_playerbotAI = 0;
+    }
+    if (m_playerbotMgr) {
+        delete m_playerbotMgr;
+        m_playerbotMgr = 0;
     }
 ////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 }
@@ -1098,10 +1104,11 @@ void Player::Update( uint32 p_time )
     UpdateAfkReport(now);
 
 ///////// Playerbotmod this was added as part of the Playerbot mod ////////////////////////////////////////////////////
-    if (m_playerbotAI != NULL) {
+    if (m_playerbotAI)
         m_playerbotAI->UpdateAI(p_time);
-    }
-///////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
+    else if (m_playerbotMgr)
+        m_playerbotMgr->UpdateAI(p_time);
+//////////////////////////////////////////////////////////////////////////////////////////////////////////////////////    
     // Update items that have just a limited lifetime
     if (now>m_Last_tick)
         UpdateItemDuration(uint32(now- m_Last_tick));
@@ -1584,11 +1591,8 @@ bool Player::TeleportTo(uint32 mapid, float x, float y, float z, float orientati
 
 /////// Playerbotmod if this user has bots, tell them to stop following master/////////////////////////////////////////////////////////////
     // so they don't try to follow the master after the master teleports
-    for (PlayerBotMap::const_iterator itr = GetSession()->GetPlayerBotsBegin(); itr != GetSession()->GetPlayerBotsEnd(); ++itr)
-    {
-        Player* botPlayer = itr->second;
-        botPlayer->GetMotionMaster()->Clear();
-    }
+    if (GetPlayerbotMgr())
+        GetPlayerbotMgr()->Stay();
 //////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
     MapEntry const* mEntry = sMapStore.LookupEntry(mapid);
 
@@ -20541,34 +20545,8 @@ void Player::SendClearCooldown( uint32 spell_id, Unit* target )
     data << uint32(spell_id);
     data << uint64(target->GetGUID());
     SendDirectMessage(&data);
-
 }
 
-////////// Playerbotmod//////////////////////////////////////////////////////////////////////////////////////////////////////
-void Player::SetPlayerbotAI(PlayerbotAI * ai)
-{
-
-    if (ai == NULL)
-    {
-        sLog.outError("Tried to assign playerbot AI to NULL; this is not supported!");
-        return;
-    }
-
-    if (GetPlayerbotAI() != NULL)
-    {
-        sLog.outError("Tried to reassign playerbot AI; this is not yet supported!");
-        return;
-    }
-
-    // assigning bot AI to normal players is not currently supported
-    if (! IsPlayerbot())
-    {
-        sLog.outError("Tried to set playerbot AI for a player that was not a bot.");
-        return;
-    }
-    m_playerbotAI = ai;
-}
-//////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 void Player::BuildTeleportAckMsg( WorldPacket *data, float x, float y, float z, float ang ) const
 {
     data->Initialize(MSG_MOVE_TELEPORT_ACK, 41);

@@ -550,6 +550,7 @@ void PlayerbotDruidAI::DoNextCombatManeuver(Unit *pTarget)
 
 void PlayerbotDruidAI::DoNonCombatActions()
 {
+    PlayerbotAI* ai = GetAI();
     Player * m_bot = GetPlayerBot();
     if (!m_bot)
         return;
@@ -557,22 +558,22 @@ void PlayerbotDruidAI::DoNonCombatActions()
     if(m_bot->HasAura(CAT_FORM, 0))
     {
         m_bot->RemoveAurasDueToSpell(768);
-        //GetAI()->TellMaster("FormClearCat");
+        ai->TellMaster("FormClearCat");
     }
     if(m_bot->HasAura(BEAR_FORM, 0))
     {
         m_bot->RemoveAurasDueToSpell(5487);
-        //ai->TellMaster("FormClearBear");
+        ai->TellMaster("FormClearBear");
     }
 	if(m_bot->HasAura(DIRE_BEAR_FORM, 0))
     {
         m_bot->RemoveAurasDueToSpell(9634);
-        //ai->TellMaster("FormClearDireBear");
+        ai->TellMaster("FormClearDireBear");
     }
 	if(m_bot->HasAura(MOONKIN_FORM, 0))
     {
         m_bot->RemoveAurasDueToSpell(24858);
-        //ai->TellMaster("FormClearMoonkin");
+        ai->TellMaster("FormClearMoonkin");
     }
 /*
     // mana myself with MANA_REJUVENATION (*moved to combat: interferes with drinking/eating)
@@ -581,27 +582,27 @@ void PlayerbotDruidAI::DoNonCombatActions()
 */
     // buff myself with MARK_OF_THE_WILD
     if (MARK_OF_THE_WILD > 0 && !m_bot->HasAura(MARK_OF_THE_WILD, 0))
-        GetAI()->CastSpell (MARK_OF_THE_WILD, *m_bot);
+        ai->CastSpell (MARK_OF_THE_WILD, *m_bot);
 
     // Thorns generates aggro for moonkin
     if (THORNS > 0 && !m_bot->HasAura(THORNS, 0))
-        GetAI()->CastSpell (THORNS, *m_bot);
+        ai->CastSpell (THORNS, *m_bot);
 /*
     // buff master with THORNS
     if (THORNS > 0 && !GetMaster()->HasAura(THORNS,0))
-        GetAI()->CastSpell (THORNS, *(GetMaster()));
+        ai->CastSpell (THORNS, *(GetMaster()));
 */
     // mana check
     if (m_bot->getStandState() != UNIT_STAND_STATE_STAND)
         m_bot->SetStandState(UNIT_STAND_STATE_STAND);
 
-    Item* pItem = GetAI()->FindDrink();
+    Item* pItem = ai->FindDrink();
 
-    if (pItem != NULL && GetAI()->GetManaPercent() < 15)
+    if (pItem != NULL && ai->GetManaPercent() < 30)
     {
-        GetAI()->TellMaster("I could use a drink.");
-        GetAI()->UseItem(*pItem);
-        GetAI()->SetIgnoreUpdateTime(30);
+        ai->TellMaster("I could use a drink.");
+        ai->UseItem(*pItem);
+        ai->SetIgnoreUpdateTime(30);
         return;
     }
 
@@ -609,13 +610,13 @@ void PlayerbotDruidAI::DoNonCombatActions()
     if (m_bot->getStandState() != UNIT_STAND_STATE_STAND)
         m_bot->SetStandState(UNIT_STAND_STATE_STAND);
 
-    pItem = GetAI()->FindFood();
+    pItem = ai->FindFood();
 
-    if (pItem != NULL && GetAI()->GetHealthPercent() < 15)
+    if (pItem != NULL && ai->GetHealthPercent() < 30)
     {
-        GetAI()->TellMaster("I could use some food.");
-        GetAI()->UseItem(*pItem);
-        GetAI()->SetIgnoreUpdateTime(30);
+        ai->TellMaster("I could use some food.");
+        ai->UseItem(*pItem);
+        ai->SetIgnoreUpdateTime(30);
         return;
     }
     
@@ -630,20 +631,20 @@ void PlayerbotDruidAI::DoNonCombatActions()
                 continue;
 
 			// first rezz em                                                 //<-------changed
-            if ( !tPlayer->isAlive() && !tPlayer->IsPlayerbot() )
+            if ( !tPlayer->isAlive() && !tPlayer->GetPlayerbotAI() )
             {
                 std::string msg = "rezzing ";
                 msg += tPlayer->GetName();
                 GetPlayerBot()->Say(msg, LANG_UNIVERSAL);
-                GetAI()->CastSpell(REVIVE, *tPlayer);
+                ai->CastSpell(REVIVE, *tPlayer);
                 // rez is only 10 sec, but give time for lag
-                GetAI()->SetIgnoreUpdateTime(17);
+                ai->SetIgnoreUpdateTime(17);
             }
             else if( tPlayer->isAlive() )
             {
 
              // buff and heal
-             (!tPlayer->HasAura(MARK_OF_THE_WILD,0) && GetAI()->CastSpell (MARK_OF_THE_WILD, *tPlayer));
+             (!tPlayer->HasAura(MARK_OF_THE_WILD,0) && ai->CastSpell (MARK_OF_THE_WILD, *tPlayer));
 			 //(!tPlayer->HasAura(THORNS,0) && GetAI()->CastSpell (THORNS, *tPlayer));
              (HealTarget(*tPlayer, tPlayer->GetHealth()*100 / tPlayer->GetMaxHealth()));
              return;

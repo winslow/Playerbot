@@ -93,9 +93,6 @@ enum PartyResult
     PARTY_RESULT_INVITE_RESTRICTED    = 13
 };
 
-//////// Playerbotmod  //////////////////////////////////////////////////////////////////////
-typedef UNORDERED_MAP<uint64, Player*> PlayerBotMap;
-////////////////////////////////////////////////////////////////////////////////////////////
 /// Player session in the World
 class MANGOS_DLL_SPEC WorldSession
 {
@@ -104,13 +101,6 @@ class MANGOS_DLL_SPEC WorldSession
         WorldSession(uint32 id, WorldSocket *sock, AccountTypes sec, uint8 expansion, time_t mute_time, LocaleConstant locale);
         ~WorldSession();
 
-/////////// Playerbotmod  /////////////////////////////////////////////////////////////////////////////////////
-        void AddPlayerBot(uint64 guid);
-        void LogoutPlayerBot(uint64 guid, bool Save);
-        Player* GetPlayerBot (uint64 guid) const;
-        PlayerBotMap::const_iterator GetPlayerBotsBegin() const { return m_playerBots.begin(); }
-        PlayerBotMap::const_iterator GetPlayerBotsEnd()   const { return m_playerBots.end();   }
-////////////////////////////////////////////////////////////////////////////////////////////////////////////////
         bool PlayerLoading() const { return m_playerLoading; }
         bool PlayerLogout() const { return m_playerLogout; }
 
@@ -749,10 +739,6 @@ class MANGOS_DLL_SPEC WorldSession
         bool   m_TutorialsChanged;
         AddonsList m_addonsList;
         ACE_Based::LockedQueue<WorldPacket*, ACE_Thread_Mutex> _recvQueue;
-
-////////// Playerbotmod /////////////////////////////////////////////////////////////////////////
-        PlayerBotMap m_playerBots; 
-////////////////////////////////////////////////////////////////////////////////////////////////
 };
 #endif
 /// @}

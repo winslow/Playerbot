@@ -1,4 +1,5 @@
 What it is:
+===========
 
 Playerbot lets you add another character from your account as a bot that you can control and which will hopefully help you. Only characters from your account can be used, so you can have a maximum of 9 bots at one time.
 
@@ -9,9 +10,11 @@ Bots will only use abilities that they have - for example, a priest will only us
 For Mangos 8149+
 
 Commands:
+=========
 
 /s .bot add BOTNAME (add character to world)
 /s .bot remove BOTNAME
+/s .bot co|combatorder BOTNAME COMBATORDER [TARGET]
 /invite BOTNAME (bot will auto accept invite)
 /t BOTNAME attack (bot will attack selected target, similar to the way a pet can attack)
 /t BOTNAME follow (orders bot to follow player; will also revive bot if dead or teleport bot if far away)
@@ -24,6 +27,29 @@ Commands:
 /t BOTNAME equip <ITEM LINK>
 /t BOTNAME reset (will reset states, orders and loot list)
 /t BOTNAME report (bot reports all items needed to finish quests)
+
+Combat Orders explained:
+========================
+
+  There are primary and secondary commands which can be combined. In this way it is
+  possible to define a bot to assist the main tank and also protect the healer, making
+  combat management much easier.
+  The commands assist and protect require a target parameter or a friendly player
+  selected by bots master.
+  Available Combat Orders:
+    tank        pri     try to bind all targets involved in combat by gaining highest threat
+    assist      pri     do damage on selected targets attacker without getting highest threat
+    heal        pri     concentrate on healing - no offensive spells, try to keep threat low
+    protect     sec     if target of protect get's directly attacked gain higher threat on attacker
+    reset       -       clear out assist and protect targets and set combat order to nothing
+  Examples:
+    .bot co TheTank tank
+    .bot co MyHealer heal
+    .bot co TheBrutal assist TheTank
+    .bot co TheBrutal protect MyHealer
+
+More Information:
+=================
 
 If specifying a spell substring, the spell chosen will be in priority of exact name match, highest spell rank, and spell using no reagents. Case does not matter. Here's some examples:
 /t BOTNAME cast greater heal
@@ -48,6 +74,7 @@ If you inspect your bot, your bot will tell you what items you have in your inve
 
 
 Changes from Trinity to Mangos:
+===============================
 
 I added the following in SharedDefines.h.
 
@@ -66,7 +93,22 @@ enum PlayerStateType
 };
 
 
+Configuration variables:
+========================
+Also see src/mangosd/mangosd.conf.dist for configuration variables!
+
+    PlayerbotAI.DebugWhisper
+        Enable debug output by whispering master
+        Default: 0 - off
+                 1 - on
+
+    PlayerbotAI.FollowDistanceMin
+    PlayerbotAI.FollowDistanceMax
+        Min. and max. follow distance for bots
+        Default: 0.5 / 1.0
+
 
 Some Problems:
+==============
 
 The bots don't always face in the right direction. Sometimes when a bot makes the kill, the corpse is not lootable. The mage bot sometimes get stuck when he begins to cast a spell (but this is corrected the next time he enters combat).
