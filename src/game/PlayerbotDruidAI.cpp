@@ -41,7 +41,7 @@ PlayerbotDruidAI::PlayerbotDruidAI(Player* const master, Player* const bot, Play
     DIRE_BEAR_FORM      = ai->getSpellId("dire bear form");
 	BEAR_FORM           = ai->getSpellId("bear form");
     CAT_FORM            = ai->getSpellId("cat form");
-	TREE_OF_LIFE        = 33891;
+	TREE_OF_LIFE        = ai->getSpellId("tree of life");//33891;
     //Cat Attack type's
     RAKE                = ai->getSpellId("rake");            //40 energy
     CLAW                = ai->getSpellId("claw");            //45
@@ -142,7 +142,7 @@ void PlayerbotDruidAI::DoNextCombatManeuver(Unit *pTarget)
     switch (SpellSequence)
     {
         case DruidTank: // Its not a tank druid, only self protecting from heavy damage if got aggro.
-            //ai->TellMaster("DruidTank");
+            ai->TellMaster("DruidTank");
 
             if( !m_bot->HasInArc(M_PI, pTarget))
             {
@@ -153,7 +153,7 @@ void PlayerbotDruidAI::DoNextCombatManeuver(Unit *pTarget)
             if(m_bot->HasAura(CAT_FORM, 0))
             {
                 m_bot->RemoveAurasDueToSpell(768);
-                //ai->TellMaster("FormClearCat");
+                ai->TellMaster("FormClearCat");
             }
 			if (MOONKIN_FORM > 0 && !m_bot->HasAura(MOONKIN_FORM, 0))
             {
@@ -191,7 +191,7 @@ void PlayerbotDruidAI::DoNextCombatManeuver(Unit *pTarget)
             }
 			else if (HURRICANE > 0 && m_bot->HasAura(MOONKIN_FORM, 0) && ai->GetAttackerCount()>=5 && DruidSpellCombat < 4 && ai->GetManaPercent() >= 91)
             {
-				//ai->TellMaster("casting hurricane!");
+				ai->TellMaster("casting hurricane!");
                 ai->CastSpell(HURRICANE, *pTarget);
 				ai->SetIgnoreUpdateTime(10);
                 DruidSpellCombat++;
@@ -217,7 +217,7 @@ void PlayerbotDruidAI::DoNextCombatManeuver(Unit *pTarget)
             }
 			else if (FORCE_OF_NATURE > 0 && m_bot->HasAura(MOONKIN_FORM, 0) && DruidSpellCombat < 8 && ai->GetManaPercent() >= 12)
             {
-				//ai->TellMaster("summoning treants.");
+				ai->TellMaster("summoning treants.");
                 ai->CastSpell(FORCE_OF_NATURE);
                 DruidSpellCombat++;
                 break;
@@ -281,7 +281,7 @@ void PlayerbotDruidAI::DoNextCombatManeuver(Unit *pTarget)
 			if(m_bot->HasAura(MOONKIN_FORM, 0))
             {
                 m_bot->RemoveAurasDueToSpell(24858);
-                //ai->TellMaster("FormClearMoonkin");
+                ai->TellMaster("FormClearMoonkin");
                 break;
             }
             if (FAERIE_FIRE > 0 && DruidSpellCombat < 1 && !pTarget->HasAura(FAERIE_FIRE, 0) && ai->GetManaPercent() >= 8)

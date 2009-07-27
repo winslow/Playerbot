@@ -126,7 +126,7 @@ void PlayerbotPriestAI::DoNextCombatManeuver(Unit *pTarget)
 
     // ------- Non Duel combat ----------
 
-    ai->SetMovementOrder( PlayerbotAI::MOVEMENT_FOLLOW, GetMaster() ); // dont want to melee mob
+    //ai->SetMovementOrder( PlayerbotAI::MOVEMENT_FOLLOW, GetMaster() ); // dont want to melee mob
 
     Player *m_bot = GetPlayerBot();
     Group *m_group = m_bot->GetGroup();
@@ -380,7 +380,7 @@ void PlayerbotPriestAI::DoNonCombatActions()
 
     Item* pItem = ai->FindDrink();
 
-    if (pItem != NULL && ai->GetManaPercent() < 30)
+    if (pItem != NULL && ai->GetManaPercent() < 50)
     {
         ai->TellMaster("I could use a drink.");
         ai->UseItem(*pItem);

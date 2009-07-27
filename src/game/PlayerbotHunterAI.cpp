@@ -71,6 +71,7 @@ void PlayerbotHunterAI::DoNextCombatManeuver(Unit *pTarget)
     // Hunter
     ai->SetInFront( pTarget );
     Player *m_bot = GetPlayerBot();
+	Unit* pVictim = pTarget->getVictim();
 
     // check for pet and heal if neccessary
     Pet *pet = m_bot->GetPet();
@@ -210,7 +211,7 @@ void PlayerbotHunterAI::DoNonCombatActions()
 
     pItem = ai->FindFood();
 
-    if (pItem != NULL && ai->GetHealthPercent() < 15)
+    if (pItem != NULL && ai->GetHealthPercent() < 30)
     {
         ai->TellMaster("I could use some food.");
         ai->UseItem(*pItem);

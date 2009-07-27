@@ -297,6 +297,7 @@ void PlayerbotMageAI::DoNextCombatManeuver(Unit *pTarget)
 
 void PlayerbotMageAI::DoNonCombatActions()
 {
+    PlayerbotAI* ai = GetAI();
     Player * m_bot = GetPlayerBot();
     if (!m_bot)
         return;
@@ -305,61 +306,82 @@ void PlayerbotMageAI::DoNonCombatActions()
 
     // buff myself
     if (DALARAN_INTELLECT > 0)
-        (!m_bot->HasAura(DALARAN_INTELLECT, 0) && GetAI()->CastSpell (DALARAN_INTELLECT, *m_bot));
+        (!m_bot->HasAura(DALARAN_INTELLECT, 0) && ai->CastSpell (DALARAN_INTELLECT, *m_bot));
     else if (ARCANE_INTELLECT > 0)
-        (!m_bot->HasAura(ARCANE_INTELLECT, 0) && GetAI()->CastSpell (ARCANE_INTELLECT, *m_bot));
+        (!m_bot->HasAura(ARCANE_INTELLECT, 0) && ai->CastSpell (ARCANE_INTELLECT, *m_bot));
 
     if (ICE_ARMOR > 0)
-        (!m_bot->HasAura(ICE_ARMOR, 0) && GetAI()->CastSpell (ICE_ARMOR, *m_bot));
+        (!m_bot->HasAura(ICE_ARMOR, 0) && ai->CastSpell (ICE_ARMOR, *m_bot));
     else if (FROST_ARMOR > 0)
-        (!m_bot->HasAura(FROST_ARMOR, 0) && GetAI()->CastSpell (FROST_ARMOR, *m_bot));
+        (!m_bot->HasAura(FROST_ARMOR, 0) && ai->CastSpell (FROST_ARMOR, *m_bot));
 
     // buff master
     if (DALARAN_INTELLECT > 0)
-        (!GetMaster()->HasAura(DALARAN_INTELLECT, 0) && GetAI()->CastSpell (DALARAN_INTELLECT, *(GetMaster())) );
+        (!GetMaster()->HasAura(DALARAN_INTELLECT, 0) && ai->CastSpell (DALARAN_INTELLECT, *(GetMaster())) );
     else if (ARCANE_INTELLECT > 0)
-        (!GetMaster()->HasAura(ARCANE_INTELLECT, 0) && GetAI()->CastSpell (ARCANE_INTELLECT, *(GetMaster())) );
+        (!GetMaster()->HasAura(ARCANE_INTELLECT, 0) && ai->CastSpell (ARCANE_INTELLECT, *(GetMaster())) );
 
     // conjure food & water
     if (m_bot->getStandState() != UNIT_STAND_STATE_STAND)
         m_bot->SetStandState(UNIT_STAND_STATE_STAND);
 
-    Item* pItem = GetAI()->FindDrink();
+    Item* pItem = ai->FindDrink();
 
-    if (pItem == NULL && CONJURE_WATER && GetAI()->GetBaseManaPercent() >= 48)
+    if (pItem == NULL && CONJURE_WATER && ai->GetBaseManaPercent() >= 48)
     {
-        GetAI()->TellMaster("I'm conjuring some water.");
-        GetAI()->CastSpell(CONJURE_WATER, *m_bot);
+        ai->TellMaster("I'm conjuring some water.");
+        ai->CastSpell(CONJURE_WATER, *m_bot);
         return;
     }
-    else if (pItem != NULL && GetAI()->GetManaPercent() < 15)
+    else if (pItem != NULL && ai->GetManaPercent() < 15)
     {
-        GetAI()->TellMaster("I could use a drink.");
-        GetAI()->UseItem(*pItem);
-        GetAI()->SetIgnoreUpdateTime(30);
+        ai->TellMaster("I could use a drink.");
+        ai->UseItem(*pItem);
+        ai->SetIgnoreUpdateTime(30);
         return;
     }
 
-    pItem = GetAI()->FindFood();
+    pItem = ai->FindFood();
 
     if (pItem == NULL && CONJURE_FOOD && GetAI()->GetBaseManaPercent() >= 48)
     {
-        GetAI()->TellMaster("I'm conjuring some food.");
-        GetAI()->CastSpell(CONJURE_FOOD, *m_bot);
+        ai->TellMaster("I'm conjuring some food.");
+        ai->CastSpell(CONJURE_FOOD, *m_bot);
     }
 
     // hp check
     if (m_bot->getStandState() != UNIT_STAND_STATE_STAND)
         m_bot->SetStandState(UNIT_STAND_STATE_STAND);
 
-    pItem = GetAI()->FindFood();
+    pItem = ai->FindFood();
 
-    if (pItem != NULL && GetAI()->GetHealthPercent() < 15)
+    if (pItem != NULL && ai->GetHealthPercent() < 30)
     {
-        GetAI()->TellMaster("I could use some food.");
-        GetAI()->UseItem(*pItem);
-        GetAI()->SetIgnoreUpdateTime(30);
+        ai->TellMaster("I could use some food.");
+        ai->UseItem(*pItem);
+        ai->SetIgnoreUpdateTime(30);
         return;
+    }
+
+	// buff  master's group
+    if (GetMaster()->GetGroup())
+    {
+        Group::MemberSlotList const& groupSlot = GetMaster()->GetGroup()->GetMemberSlots();
+        for (Group::member_citerator itr = groupSlot.begin(); itr != groupSlot.end(); itr++)
+        {
+            Player *tPlayer = objmgr.GetPlayer(uint64 (itr->guid));
+            if( !tPlayer )
+                continue;
+
+			
+            if( tPlayer->isAlive() )
+            {
+
+             // buff and heal
+             (!tPlayer->HasAura(ARCANE_INTELLECT,0) && ai->CastSpell (ARCANE_INTELLECT, *tPlayer));
+             return;
+			}
+        }
     }
 
 } // end DoNonCombatActions

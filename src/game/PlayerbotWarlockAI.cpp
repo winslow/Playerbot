@@ -74,7 +74,7 @@ void PlayerbotWarlockAI::DoNextCombatManeuver(Unit *pTarget)
 
     // ------- Non Duel combat ----------
 
-    ai->SetMovementOrder( PlayerbotAI::MOVEMENT_FOLLOW, GetMaster() ); // dont want to melee mob
+    //ai->SetMovementOrder( PlayerbotAI::MOVEMENT_FOLLOW, GetMaster() ); // dont want to melee mob
 
 	// check for mana and life tap
 	if (ai->GetManaPercent() < 35)
@@ -326,6 +326,7 @@ void PlayerbotWarlockAI::DoNextCombatManeuver(Unit *pTarget)
 
 void PlayerbotWarlockAI::DoNonCombatActions()
 {
+    PlayerbotAI* ai = GetAI();
     Player * m_bot = GetPlayerBot();
     if (!m_bot)
         return;
@@ -334,24 +335,24 @@ void PlayerbotWarlockAI::DoNonCombatActions()
 
     // buff myself  DEMON_SKIN, DEMON_ARMOR, FEL_ARMOR
     if (FEL_ARMOR > 0)
-        (!m_bot->HasAura(FEL_ARMOR, 0) && GetAI()->CastSpell(FEL_ARMOR, *m_bot));
+        (!m_bot->HasAura(FEL_ARMOR, 0) && ai->CastSpell(FEL_ARMOR, *m_bot));
     else if (DEMON_ARMOR > 0)
-        (!m_bot->HasAura(DEMON_ARMOR, 0) && !m_bot->HasAura(FEL_ARMOR, 0) && GetAI()->CastSpell(DEMON_ARMOR, *m_bot));
+        (!m_bot->HasAura(DEMON_ARMOR, 0) && !m_bot->HasAura(FEL_ARMOR, 0) && ai->CastSpell(DEMON_ARMOR, *m_bot));
     else if (DEMON_SKIN > 0)
-        (!m_bot->HasAura(DEMON_SKIN, 0) && !m_bot->HasAura(FEL_ARMOR, 0) && !m_bot->HasAura(DEMON_ARMOR, 0) && GetAI()->CastSpell(DEMON_SKIN, *m_bot));
+        (!m_bot->HasAura(DEMON_SKIN, 0) && !m_bot->HasAura(FEL_ARMOR, 0) && !m_bot->HasAura(DEMON_ARMOR, 0) && ai->CastSpell(DEMON_SKIN, *m_bot));
 
 
     // mana check
     if (m_bot->getStandState() != UNIT_STAND_STATE_STAND)
         m_bot->SetStandState(UNIT_STAND_STATE_STAND);
 
-    Item* pItem = GetAI()->FindDrink();
+    Item* pItem = ai->FindDrink();
 
-    if (pItem != NULL && GetAI()->GetManaPercent() < 15)
+    if (pItem != NULL && ai->GetManaPercent() < 50)
     {
-        GetAI()->TellMaster("I could use a drink.");
-        GetAI()->UseItem(*pItem);
-        GetAI()->SetIgnoreUpdateTime(30);
+        ai->TellMaster("I could use a drink.");
+        ai->UseItem(*pItem);
+        ai->SetIgnoreUpdateTime(30);
         return;
     }
 
@@ -359,13 +360,13 @@ void PlayerbotWarlockAI::DoNonCombatActions()
     if (m_bot->getStandState() != UNIT_STAND_STATE_STAND)
         m_bot->SetStandState(UNIT_STAND_STATE_STAND);
 
-    pItem = GetAI()->FindFood();
+    pItem = ai->FindFood();
 
-    if (pItem != NULL && GetAI()->GetHealthPercent() < 15)
+    if (pItem != NULL && ai->GetHealthPercent() < 30)
     {
-        GetAI()->TellMaster("I could use some food.");
-        GetAI()->UseItem(*pItem);
-        GetAI()->SetIgnoreUpdateTime(30);
+        ai->TellMaster("I could use some food.");
+        ai->UseItem(*pItem);
+        ai->SetIgnoreUpdateTime(30);
         return;
     }
 
@@ -376,12 +377,12 @@ void PlayerbotWarlockAI::DoNonCombatActions()
         if( !pet )
         {
             // summon demon (only imp for now)
-            if( SUMMON_IMP>0 && GetAI()->GetManaPercent() >= 64 && GetAI()->CastSpell(SUMMON_IMP,*m_bot) )
-                GetAI()->TellMaster( "summoning demon." );
+            if( SUMMON_IMP>0 && ai->GetManaPercent() >= 64 && ai->CastSpell(SUMMON_IMP,*m_bot) )
+                ai->TellMaster( "summoning demon." );
             else
             {
                 m_demonSummonFailed = true;
-                //GetAI()->TellMaster( "summon demon failed!" );
+                ai->TellMaster( "summon demon failed!" );
                 return;
             }
         }

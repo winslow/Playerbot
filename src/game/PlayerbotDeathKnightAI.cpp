@@ -28,12 +28,12 @@ PlayerbotDeathKnightAI::PlayerbotDeathKnightAI(Player* const master, Player* con
    KILLING_MACHINE   = ai->getSpellId("killing machine");
    HORN_OF_WINTER    = ai->getSpellId("horn of winter");
    RUNE_TAP			 = ai->getSpellId("rune tap");//
-   UNHOLY_PRESENCE   = 48265; // presence
-   FROST_PRESENCE    = 48263;
-   BLOOD_PRESENCE    = 48266;
+   UNHOLY_PRESENCE   = ai->getSpellId("unholy presence");//48265; // presence
+   FROST_PRESENCE    = ai->getSpellId("frost presence");//48263;
+   BLOOD_PRESENCE    = ai->getSpellId("blood presence");//48266;
    RAISE_DEAD        = ai->getSpellId("raise dead"); // pets (TODO: check for pets exist)
-   SUMMON_GARGOYLE   = 49206;
-   ARMY_OF_THE_DEAD  = 42650;
+   SUMMON_GARGOYLE   = ai->getSpellId("summon gargoyle"); //49206;
+   ARMY_OF_THE_DEAD  = ai->getSpellId("army of the dead"); //42650;
 }
 
 PlayerbotDeathKnightAI::~PlayerbotDeathKnightAI() {}
@@ -42,7 +42,7 @@ void PlayerbotDeathKnightAI::DoNextCombatManeuver(Unit *pTarget)
 {
    PlayerbotAI* ai = GetAI();
    if (!ai)
-       return;
+       return; 
 
    switch (ai->GetScenarioType())
    {
@@ -53,19 +53,19 @@ void PlayerbotDeathKnightAI::DoNextCombatManeuver(Unit *pTarget)
 
    // ------- Non Duel combat ----------
 
-   //ai->Follow(*GetMaster()); // dont want to melee mob
 
    // DK Attcks: Unholy, Frost & Blood
 
    // damage spells
    ai->SetInFront( pTarget );//<---
    Player *m_bot = GetPlayerBot();
+   Unit* pVictim = pTarget->getVictim();
 
    switch (SpellSequence)
    {
        case SPELL_DK_UNHOLY:
 		   if(BONE_SHIELD > 0 && LastSpellUnholyDK < 1)
-			  (!m_bot->HasAura(BONE_SHIELD, 0) && GetAI()->CastSpell (BONE_SHIELD, *m_bot));
+			  (!m_bot->HasAura(BONE_SHIELD, 0) && ai->CastSpell (BONE_SHIELD, *m_bot));
 
 		   if (ARMY_OF_THE_DEAD > 0 && ai->GetAttackerCount()>=5 && LastSpellUnholyDK < 2)
            {
@@ -163,7 +163,7 @@ void PlayerbotDeathKnightAI::DoNextCombatManeuver(Unit *pTarget)
 
        case SPELL_DK_FROST:
            if (KILLING_MACHINE > 0)
-               (!m_bot->HasAura(KILLING_MACHINE, 0) && GetAI()->CastSpell (KILLING_MACHINE, *m_bot));
+               (!m_bot->HasAura(KILLING_MACHINE, 0) && ai->CastSpell (KILLING_MACHINE, *m_bot));
 
 		   if (FROST_PRESENCE > 0 && LastSpellFrostDK < 1)
            {
@@ -232,7 +232,7 @@ void PlayerbotDeathKnightAI::DoNextCombatManeuver(Unit *pTarget)
 
        case SPELL_DK_BLOOD:
            if (MARK_OF_BLOOD > 0)
-               (!m_bot->HasAura(MARK_OF_BLOOD, 0) && GetAI()->CastSpell (MARK_OF_BLOOD, *m_bot));
+               (!m_bot->HasAura(MARK_OF_BLOOD, 0) && ai->CastSpell (MARK_OF_BLOOD, *m_bot));
 
 		   if (BLOOD_PRESENCE > 0 && LastSpellBloodDK < 1)
            {
@@ -297,31 +297,32 @@ void PlayerbotDeathKnightAI::DoNextCombatManeuver(Unit *pTarget)
 
 void PlayerbotDeathKnightAI::DoNonCombatActions()
 {
-   Player * m_bot = GetPlayerBot();
-   if (!m_bot)
-       return;
+   PlayerbotAI* ai = GetAI();
+    Player * m_bot = GetPlayerBot();
+    if (!m_bot)
+        return;
 
    SpellSequence = SPELL_DK_BLOOD;
 
        // buff myself (Blood DK) NO more Horn of winter
        if (BLOOD_PRESENCE > 0)
-               (!m_bot->HasAura(BLOOD_PRESENCE, 0) && GetAI()->CastSpell (BLOOD_PRESENCE, *m_bot));
+               (!m_bot->HasAura(BLOOD_PRESENCE, 0) && ai->CastSpell (BLOOD_PRESENCE, *m_bot));
 
    // buff master with HORN_OF_WINTER
    if (HORN_OF_WINTER> 0)
-       (!GetMaster()->HasAura(HORN_OF_WINTER,0) && GetAI()->CastSpell (HORN_OF_WINTER, *(GetMaster())) );
+       (!GetMaster()->HasAura(HORN_OF_WINTER,0) && ai->CastSpell (HORN_OF_WINTER, *(GetMaster())) );
 
    // hp check
    if (m_bot->getStandState() != UNIT_STAND_STATE_STAND)
        m_bot->SetStandState(UNIT_STAND_STATE_STAND);
 
-   Item* pItem = GetAI()->FindFood();
+   Item* pItem = ai->FindFood();
 
-   if (pItem != NULL && GetAI()->GetHealthPercent() < 15)
+   if (pItem != NULL && ai->GetHealthPercent() < 30)
    {
-       GetAI()->TellMaster("I could use some food.");
-       GetAI()->UseItem(*pItem);
-       GetAI()->SetIgnoreUpdateTime(30);
+       ai->TellMaster("I could use some food.");
+       ai->UseItem(*pItem);
+       ai->SetIgnoreUpdateTime(30);
        return;
    }
 } // end DoNonCombatActions
