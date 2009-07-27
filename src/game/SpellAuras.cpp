@@ -2709,14 +2709,34 @@ void Aura::HandleAuraModShapeshift(bool apply, bool Real)
         case FORM_FLIGHT_EPIC:
         case FORM_FLIGHT:
         case FORM_MOONKIN:
+        {
             // remove movement affects
             m_target->RemoveSpellsCausingAura(SPELL_AURA_MOD_ROOT);
-            m_target->RemoveSpellsCausingAura(SPELL_AURA_MOD_DECREASE_SPEED);
+            Unit::AuraList const& slowingAuras = m_target->GetAurasByType(SPELL_AURA_MOD_DECREASE_SPEED);
+            for (Unit::AuraList::const_iterator iter = slowingAuras.begin(); iter != slowingAuras.end();)
+            {
+                SpellEntry const* aurSpellInfo = (*iter)->GetSpellProto();
+
+                // If spell that caused this aura has Croud Control or Daze effect
+                if((GetAllSpellMechanicMask(aurSpellInfo) & MECHANIC_NOT_REMOVED_BY_SHAPESHIFT) ||
+                    // some Daze spells have these parameters instead of MECHANIC_DAZE
+                    (aurSpellInfo->SpellIconID == 15 && aurSpellInfo->Dispel == 0))
+                {
+                    ++iter;
+                    continue;
+                }
+
+                // All OK, remove aura now
+                m_target->RemoveAurasDueToSpellByCancel(aurSpellInfo->Id);
+                iter = slowingAuras.begin();
+            }
 
             // and polymorphic affects
             if(m_target->IsPolymorphed())
                 m_target->RemoveAurasDueToSpell(m_target->getTransForm());
+
             break;
+        }
         default:
            break;
     }
@@ -5776,6 +5796,23 @@ void Aura::HandleSchoolAbsorb(bool apply, bool Real)
         m_modifier.m_amount += (int32)DoneActualBenefit;
     }
 
+    // Ice Barrier (remove effect from Shattered Barrier)
+    if(!apply && m_spellProto->SpellIconID == 32 && m_spellProto->SpellFamilyName == SPELLFAMILY_MAGE)
+    {
+        if (!((m_removeMode == AURA_REMOVE_BY_DEFAULT && !m_modifier.m_amount) || m_removeMode == AURA_REMOVE_BY_DISPEL))
+            return;
+
+        if (m_target->HasAura(44745,0))                     // Shattered Barrier, rank 1
+        {
+            if(roll_chance_i(50))
+                m_target->CastSpell(m_target, 55080, true, NULL, this);
+        }
+        else if (m_target->HasAura(54787,0))                // Shattered Barrier, rank 2
+        {
+            m_target->CastSpell(m_target, 55080, true, NULL, this);
+        }
+    }
+
     if (!apply && caster &&
         // Power Word: Shield
         m_spellProto->SpellFamilyName == SPELLFAMILY_PRIEST && m_spellProto->Mechanic == MECHANIC_SHIELD &&
@@ -6952,9 +6989,7 @@ void Aura::UnregisterSingleCastAura()
 {
     if (IsSingleTarget())
     {
-        Unit* caster = NULL;
-        caster = GetCaster();
-        if(caster)
+        if(Unit* caster = GetCaster())
         {
             caster->GetSingleCastAuras().remove(this);
         }
