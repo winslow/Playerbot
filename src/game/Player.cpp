@@ -1102,13 +1102,7 @@ void Player::Update( uint32 p_time )
     CheckDuelDistance(now);
 
     UpdateAfkReport(now);
-
-///////// Playerbotmod this was added as part of the Playerbot mod ////////////////////////////////////////////////////
-    if (m_playerbotAI)
-        m_playerbotAI->UpdateAI(p_time);
-    else if (m_playerbotMgr)
-        m_playerbotMgr->UpdateAI(p_time);
-//////////////////////////////////////////////////////////////////////////////////////////////////////////////////////    
+   
     // Update items that have just a limited lifetime
     if (now>m_Last_tick)
         UpdateItemDuration(uint32(now- m_Last_tick));
@@ -1352,6 +1346,12 @@ void Player::Update( uint32 p_time )
     //because we don't want player's ghost teleported from graveyard
     if(IsHasDelayedTeleport() && isAlive())
         TeleportTo(m_teleport_dest, m_teleport_options);
+///////// Playerbotmod this was added as part of the Playerbot mod ////////////////////////////////////////////////////
+	if (m_playerbotAI)
+        m_playerbotAI->UpdateAI(p_time);
+    else if (m_playerbotMgr)
+        m_playerbotMgr->UpdateAI(p_time);
+//////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 }
 
 void Player::setDeathState(DeathState s)
