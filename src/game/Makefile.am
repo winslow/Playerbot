@@ -222,7 +222,9 @@ libmangosgame_a_SOURCES = \
 	PlayerbotHunterAI.h \
 	PlayerbotMageAI.cpp \
 	PlayerbotMageAI.h \
-	PlayerbotPaladinAI.cpp \
+  PlayerbotMgr.cpp \
+  PlayerbotMgr.h \
+  PlayerbotPaladinAI.cpp \
 	PlayerbotPaladinAI.h \
 	PlayerbotPriestAI.cpp \
 	PlayerbotPriestAI.h \

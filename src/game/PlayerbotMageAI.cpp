@@ -306,20 +306,20 @@ void PlayerbotMageAI::DoNonCombatActions()
 
     // buff myself
     if (DALARAN_INTELLECT > 0)
-        (!m_bot->HasAura(DALARAN_INTELLECT, 0) && ai->CastSpell (DALARAN_INTELLECT, *m_bot));
+        (!m_bot->GetAura(DALARAN_INTELLECT, 0) && ai->CastSpell (DALARAN_INTELLECT, *m_bot));
     else if (ARCANE_INTELLECT > 0)
-        (!m_bot->HasAura(ARCANE_INTELLECT, 0) && ai->CastSpell (ARCANE_INTELLECT, *m_bot));
+        (!m_bot->GetAura(ARCANE_INTELLECT, 0) && ai->CastSpell (ARCANE_INTELLECT, *m_bot));
 
     if (ICE_ARMOR > 0)
-        (!m_bot->HasAura(ICE_ARMOR, 0) && ai->CastSpell (ICE_ARMOR, *m_bot));
+        (!m_bot->GetAura(ICE_ARMOR, 0) && ai->CastSpell (ICE_ARMOR, *m_bot));
     else if (FROST_ARMOR > 0)
-        (!m_bot->HasAura(FROST_ARMOR, 0) && ai->CastSpell (FROST_ARMOR, *m_bot));
+        (!m_bot->GetAura(FROST_ARMOR, 0) && ai->CastSpell (FROST_ARMOR, *m_bot));
 
     // buff master
     if (DALARAN_INTELLECT > 0)
-        (!GetMaster()->HasAura(DALARAN_INTELLECT, 0) && ai->CastSpell (DALARAN_INTELLECT, *(GetMaster())) );
+        (!GetMaster()->GetAura(DALARAN_INTELLECT, 0) && ai->CastSpell (DALARAN_INTELLECT, *(GetMaster())) );
     else if (ARCANE_INTELLECT > 0)
-        (!GetMaster()->HasAura(ARCANE_INTELLECT, 0) && ai->CastSpell (ARCANE_INTELLECT, *(GetMaster())) );
+        (!GetMaster()->GetAura(ARCANE_INTELLECT, 0) && ai->CastSpell (ARCANE_INTELLECT, *(GetMaster())) );
 
     // conjure food & water
     if (m_bot->getStandState() != UNIT_STAND_STATE_STAND)
@@ -378,7 +378,7 @@ void PlayerbotMageAI::DoNonCombatActions()
             {
 
              // buff and heal
-             (!tPlayer->HasAura(ARCANE_INTELLECT,0) && ai->CastSpell (ARCANE_INTELLECT, *tPlayer));
+             (!tPlayer->GetAura(ARCANE_INTELLECT,0) && ai->CastSpell (ARCANE_INTELLECT, *tPlayer));
              return;
 			}
         }

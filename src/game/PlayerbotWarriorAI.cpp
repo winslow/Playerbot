@@ -102,10 +102,10 @@ void PlayerbotWarriorAI::DoNextCombatManeuver(Unit *pTarget)
     {
         case Tanking:
             ai->TellMaster("Tanking");
-            if (DEFENSIVE_STANCE > 0 && !m_bot->HasAura(DEFENSIVE_STANCE, 0))
+            if (DEFENSIVE_STANCE > 0 && !m_bot->GetAura(DEFENSIVE_STANCE, 0))//<------
                 ai->CastSpell (DEFENSIVE_STANCE);
 
-            if (DEMORALIZING_SHOUT > 0 && !pTarget->HasAura(DEMORALIZING_SHOUT, 0) && ai->GetRageAmount() >= 10)
+            if (DEMORALIZING_SHOUT > 0 && !pTarget->GetAura(DEMORALIZING_SHOUT, 0) && ai->GetRageAmount() >= 10)//<------
                 ai->CastSpell (DEMORALIZING_SHOUT);
             else if (SHIELD_BLOCK > 0 && TankCounter < 1 && pVictim)
             {
@@ -167,7 +167,7 @@ void PlayerbotWarriorAI::DoNextCombatManeuver(Unit *pTarget)
                 TankCounter++;
                 break;
             }
-            else if (COMMANDING_SHOUT > 0 && TankCounter < 10 && !m_bot->HasAura(COMMANDING_SHOUT, 0) && ai->GetRageAmount() >= 10)
+            else if (COMMANDING_SHOUT > 0 && TankCounter < 10 && !m_bot->GetAura(COMMANDING_SHOUT, 0) && ai->GetRageAmount() >= 10)//<------
             {
                 ai->CastSpell (COMMANDING_SHOUT);
                 TankCounter++;
@@ -219,7 +219,7 @@ void PlayerbotWarriorAI::DoNextCombatManeuver(Unit *pTarget)
 
         case SpellPreventing:
             ai->TellMaster("Case SpellPreventing");
-            if (SPELL_REFLECTION > 0 && m_bot->HasAura(DEFENSIVE_STANCE, 0) && pVictim && pTarget->IsNonMeleeSpellCasted(true) && ai->GetRageAmount() >= 15)
+            if (SPELL_REFLECTION > 0 && m_bot->GetAura(DEFENSIVE_STANCE, 0) && pVictim && pTarget->IsNonMeleeSpellCasted(true) && ai->GetRageAmount() >= 15)//<------
             {
                 if (pVictim == m_bot)
                 {
@@ -227,7 +227,7 @@ void PlayerbotWarriorAI::DoNextCombatManeuver(Unit *pTarget)
                     ai->TellMaster("SpellRef");
                 }
             }
-            else if (PUMMEL > 0 && m_bot->HasAura(BERSERKER_STANCE, 0) && pTarget->IsNonMeleeSpellCasted(true) && ai->GetRageAmount() >= 10)
+            else if (PUMMEL > 0 && m_bot->GetAura(BERSERKER_STANCE, 0) && pTarget->IsNonMeleeSpellCasted(true) && ai->GetRageAmount() >= 10)//<------
             {
                 ai->CastSpell (PUMMEL, *pTarget);
                 ai->TellMaster("PUMMEL");
@@ -254,19 +254,19 @@ void PlayerbotWarriorAI::DoNonCombatActions()
     // With stance change can the shout change to. 
     // Inserted line to battle shout m_bot->HasAura( COMMANDING_SHOUT, 0 )
     // Natsukawa
-    if( ( (COMMANDING_SHOUT>0 && !m_bot->HasAura( COMMANDING_SHOUT, 0 )) ||
-        (BATTLE_SHOUT>0 && !m_bot->HasAura( BATTLE_SHOUT, 0 )) ) && 
+    if( ( (COMMANDING_SHOUT>0 && !m_bot->GetAura( COMMANDING_SHOUT, 0 )) ||     //<------
+        (BATTLE_SHOUT>0 && !m_bot->GetAura( BATTLE_SHOUT, 0 )) ) &&             //<------
         ai->GetRageAmount()<10 && BLOODRAGE>0 && !m_bot->HasAura( BLOODRAGE, 0 ) )
     {
         // we do have a useful shout, no rage coming but can cast bloodrage... do it
         ai->CastSpell( BLOODRAGE, *m_bot );
     }
-    else if( COMMANDING_SHOUT>0 && !m_bot->HasAura( COMMANDING_SHOUT, 0 ) )
+    else if( COMMANDING_SHOUT>0 && !m_bot->GetAura( COMMANDING_SHOUT, 0 ) )   //<------
     {
         // use commanding shout now
         ai->CastSpell( COMMANDING_SHOUT, *m_bot );
     }
-    else if( BATTLE_SHOUT>0 && !m_bot->HasAura( BATTLE_SHOUT, 0 ) && !m_bot->HasAura( COMMANDING_SHOUT, 0 ) )
+    else if( BATTLE_SHOUT>0 && !m_bot->GetAura( BATTLE_SHOUT, 0 ) && !m_bot->GetAura( COMMANDING_SHOUT, 0 ) )//<------
     {
         // use battle shout
         ai->CastSpell( BATTLE_SHOUT, *m_bot );

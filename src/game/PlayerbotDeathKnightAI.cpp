@@ -65,13 +65,13 @@ void PlayerbotDeathKnightAI::DoNextCombatManeuver(Unit *pTarget)
    {
        case SPELL_DK_UNHOLY:
 		   if(BONE_SHIELD > 0 && LastSpellUnholyDK < 1)
-			  (!m_bot->HasAura(BONE_SHIELD, 0) && ai->CastSpell (BONE_SHIELD, *m_bot));
+			  (!m_bot->GetAura(BONE_SHIELD, 0) && ai->CastSpell (BONE_SHIELD, *m_bot));
 
 		   if (ARMY_OF_THE_DEAD > 0 && ai->GetAttackerCount()>=5 && LastSpellUnholyDK < 2)
            {
 			   ai->TellMaster("summoning Army of the Dead!");
                ai->CastSpell(ARMY_OF_THE_DEAD);
-			   if (ARMY_OF_THE_DEAD > 0 && m_bot->HasAura(ARMY_OF_THE_DEAD, 0))
+			   if (ARMY_OF_THE_DEAD > 0 && m_bot->GetAura(ARMY_OF_THE_DEAD, 0))
 				   ai->SetIgnoreUpdateTime(7);
                SpellSequence = SPELL_DK_FROST;
                LastSpellUnholyDK = LastSpellUnholyDK +1;
@@ -106,14 +106,14 @@ void PlayerbotDeathKnightAI::DoNextCombatManeuver(Unit *pTarget)
                LastSpellUnholyDK = LastSpellUnholyDK +1;
                break;
            }
-           else if (DEATH_STRIKE > 0 && !pTarget->HasAura(DEATH_STRIKE, 0) && LastSpellUnholyDK < 7)
+           else if (DEATH_STRIKE > 0 && !pTarget->GetAura(DEATH_STRIKE, 0) && LastSpellUnholyDK < 7)
            {
                ai->CastSpell(DEATH_STRIKE);
                SpellSequence = SPELL_DK_FROST;
                LastSpellUnholyDK = LastSpellUnholyDK +1;
                break;
            }
-           else if (UNHOLY_BLIGHT > 0 && !m_bot->HasAura(UNHOLY_BLIGHT, 0) && !pTarget->HasAura(UNHOLY_BLIGHT, 0) && LastSpellUnholyDK < 8 && ai->GetRunicPower() >= 40)
+           else if (UNHOLY_BLIGHT > 0 && !m_bot->GetAura(UNHOLY_BLIGHT, 0) && !pTarget->GetAura(UNHOLY_BLIGHT, 0) && LastSpellUnholyDK < 8 && ai->GetRunicPower() >= 40)
            {
                ai->CastSpell(UNHOLY_BLIGHT);
                SpellSequence = SPELL_DK_FROST;
@@ -127,7 +127,7 @@ void PlayerbotDeathKnightAI::DoNextCombatManeuver(Unit *pTarget)
                LastSpellUnholyDK = LastSpellUnholyDK +1;
                break;
            }
-		   else if (DEATH_AND_DECAY > 0 && ai->GetAttackerCount()>=3 && !pTarget->HasAura(DEATH_AND_DECAY, 0) && LastSpellUnholyDK < 10)
+		   else if (DEATH_AND_DECAY > 0 && ai->GetAttackerCount()>=3 && !pTarget->GetAura(DEATH_AND_DECAY, 0) && LastSpellUnholyDK < 10)
            {
                ai->CastSpell(DEATH_AND_DECAY);
 			   ai->SetIgnoreUpdateTime(1);
@@ -135,7 +135,7 @@ void PlayerbotDeathKnightAI::DoNextCombatManeuver(Unit *pTarget)
                LastSpellUnholyDK = LastSpellUnholyDK +1;
                break;
            }
-		   else if (SUMMON_GARGOYLE > 0 && !m_bot->HasAura(ARMY_OF_THE_DEAD, 0) && LastSpellUnholyDK < 11 && ai->GetRunicPower() >= 50)
+		   else if (SUMMON_GARGOYLE > 0 && !m_bot->GetAura(ARMY_OF_THE_DEAD, 0) && LastSpellUnholyDK < 11 && ai->GetRunicPower() >= 50)
            {
 			   //ai->TellMaster("summoning gargoyle.");
                ai->CastSpell(SUMMON_GARGOYLE);
@@ -144,7 +144,7 @@ void PlayerbotDeathKnightAI::DoNextCombatManeuver(Unit *pTarget)
                LastSpellUnholyDK = LastSpellUnholyDK +1;
                break;
            }
-           else if (RAISE_DEAD > 0 && !m_bot->HasAura(ARMY_OF_THE_DEAD, 0) && LastSpellUnholyDK < 12)
+           else if (RAISE_DEAD > 0 && !m_bot->GetAura(ARMY_OF_THE_DEAD, 0) && LastSpellUnholyDK < 12)
            {
 			   //ai->TellMaster("summoning ghoul.");
                ai->CastSpell(RAISE_DEAD);
@@ -163,7 +163,7 @@ void PlayerbotDeathKnightAI::DoNextCombatManeuver(Unit *pTarget)
 
        case SPELL_DK_FROST:
            if (KILLING_MACHINE > 0)
-               (!m_bot->HasAura(KILLING_MACHINE, 0) && ai->CastSpell (KILLING_MACHINE, *m_bot));
+               (!m_bot->GetAura(KILLING_MACHINE, 0) && ai->CastSpell (KILLING_MACHINE, *m_bot));
 
 		   if (FROST_PRESENCE > 0 && LastSpellFrostDK < 1)
            {
@@ -232,7 +232,7 @@ void PlayerbotDeathKnightAI::DoNextCombatManeuver(Unit *pTarget)
 
        case SPELL_DK_BLOOD:
            if (MARK_OF_BLOOD > 0)
-               (!m_bot->HasAura(MARK_OF_BLOOD, 0) && ai->CastSpell (MARK_OF_BLOOD, *m_bot));
+               (!m_bot->GetAura(MARK_OF_BLOOD, 0) && ai->CastSpell (MARK_OF_BLOOD, *m_bot));
 
 		   if (BLOOD_PRESENCE > 0 && LastSpellBloodDK < 1)
            {
@@ -306,11 +306,11 @@ void PlayerbotDeathKnightAI::DoNonCombatActions()
 
        // buff myself (Blood DK) NO more Horn of winter
        if (BLOOD_PRESENCE > 0)
-               (!m_bot->HasAura(BLOOD_PRESENCE, 0) && ai->CastSpell (BLOOD_PRESENCE, *m_bot));
+               (!m_bot->GetAura(BLOOD_PRESENCE, 0) && ai->CastSpell (BLOOD_PRESENCE, *m_bot));
 
    // buff master with HORN_OF_WINTER
    if (HORN_OF_WINTER> 0)
-       (!GetMaster()->HasAura(HORN_OF_WINTER,0) && ai->CastSpell (HORN_OF_WINTER, *(GetMaster())) );
+       (!GetMaster()->GetAura(HORN_OF_WINTER,0) && ai->CastSpell (HORN_OF_WINTER, *(GetMaster())) );
 
    // hp check
    if (m_bot->getStandState() != UNIT_STAND_STATE_STAND)
