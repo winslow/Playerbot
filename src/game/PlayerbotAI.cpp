@@ -481,7 +481,9 @@ void PlayerbotAI::HandleBotOutgoingPacket(const WorldPacket& packet)
             else if (!GetMaster()->IsMounted() && m_bot->IsMounted())
             {
                 WorldPacket emptyPacket;
-                m_bot->GetSession()->HandleCancelMountAuraOpcode(emptyPacket);  //updated code
+				m_bot->Unmount();
+                m_bot->RemoveSpellsCausingAura(SPELL_AURA_MOUNTED);
+                //m_bot->GetSession()->HandleCancelMountAuraOpcode(emptyPacket);  //updated code
             }
             return;
         }
@@ -505,7 +507,9 @@ void PlayerbotAI::HandleBotOutgoingPacket(const WorldPacket& packet)
             uint64 guid = extractGuid(p);
             if (guid != m_bot->GetGUID())
                 return;
-			m_bot->m_movementInfo.RemoveMovementFlag(MOVEMENTFLAG_FLYING2);
+			m_bot->Unmount();
+            m_bot->RemoveSpellsCausingAura(SPELL_AURA_MOUNTED);
+			//m_bot->m_movementInfo.RemoveMovementFlag(MOVEMENTFLAG_FLYING2);
             //m_bot->SetSpeed(MOVE_RUN,GetMaster()->GetSpeedRate(MOVE_RUN),true);
             return;
         }
