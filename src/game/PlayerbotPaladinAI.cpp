@@ -20,39 +20,28 @@ PlayerbotPaladinAI::PlayerbotPaladinAI(Player* const master, Player* const bot, 
     CONCENTRATION_AURA           = ai->getSpellId("concentration aura");
     CRUSADER_AURA                = ai->getSpellId("crusader aura");
     CRUSADER_STRIKE              = ai->getSpellId("crusader strike");
-	SEAL_OF_COMMAND              = ai->getSpellId("seal of command"); // if not change it back to = 20375
-	SEAL_OF_RIGHTEOUSNESS        = ai->getSpellId("seal of righteousness"); // if not 21084 
-	SEAL_OF_LIGHT				 = ai->getSpellId("seal of light"); // if not 20165
+    SEAL_OF_COMMAND              = 20375; //For some reason getSpellId was not working. Replaced with spell id
 	SEAL_OF_WISDOM				 = ai->getSpellId("seal of wisdom"); // if not 20166
-	JUDGEMENT_OF_LIGHT           = ai->getSpellId("judgement of light");
+    JUDGEMENT_OF_LIGHT           = ai->getSpellId("judgement of light");
     JUDGEMENT_OF_WISDOM          = ai->getSpellId("judgement of wisdom");
     FLASH_OF_LIGHT               = ai->getSpellId("flash of light");
     HOLY_LIGHT                   = ai->getSpellId("holy light");
-    DIVINE_SHIELD                = ai->getSpellId("divine shield"); // if not change it back to = 642
-	HAND_OF_PROTECTION           = ai->getSpellId("hand of protection");
+    DIVINE_SHIELD                = 642; // ai->getSpellId("divine shield");
+    HAND_OF_PROTECTION           = 10278;
     BLESSING_OF_MIGHT            = ai->getSpellId("blessing of might");
     GREATER_BLESSING_OF_MIGHT    = ai->getSpellId("greater blessing of might");
     BLESSING_OF_WISDOM           = ai->getSpellId("blessing of wisdom");
     GREATER_BLESSING_OF_WISDOM   = ai->getSpellId("greater blessing of wisdom");
     BLESSING_OF_KINGS            = ai->getSpellId("blessing of kings");
     GREATER_BLESSING_OF_KINGS    = ai->getSpellId("greater blessing of kings");
-	LAY_ON_HANDS				 = ai->getSpellId("lay on hands");
-	HAMMER_OF_JUSTICE            = ai->getSpellId("hammer of justice");
+    HAMMER_OF_JUSTICE            = ai->getSpellId("hammer of justice");
     RIGHTEOUS_FURY               = ai->getSpellId("righteous fury");
     CONSECRATION                 = ai->getSpellId("consecration");
     AVENGING_WRATH               = ai->getSpellId("avenging wrath");
     HAMMER_OF_WRATH              = ai->getSpellId("hammer of wrath");
-    EXORCISM					 = ai->getSpellId("exorcism");
-    HOLY_WRATH					 = ai->getSpellId("holy wrath");
-    DIVINE_PLEA					 = ai->getSpellId("divine plea");
-    HAND_OF_RECKONING            = ai->getSpellId("hand of reckoning");
-    SHIELD_OF_RIGHTEOUSNESS		 = ai->getSpellId("shield of righteousness");
-    AVENGERS_SHIELD				 = ai->getSpellId("avengers shield");
-    HAMMER_OF_RIGHTEOUS			 = ai->getSpellId("hammer of righteous");
-    HOLY_SHEILD					 = ai->getSpellId("holy sheild");
-    DIVINE_STORM				 = ai->getSpellId("divine storm");
 	REDEMPTION                   = ai->getSpellId("redemption");
 }
+
 PlayerbotPaladinAI::~PlayerbotPaladinAI() {}
 
 void PlayerbotPaladinAI::HealTarget(Unit &target, uint8 hp)
@@ -69,6 +58,7 @@ void PlayerbotPaladinAI::HealTarget(Unit &target, uint8 hp)
         ai->CastSpell(FLASH_OF_LIGHT, target);
     }
 }
+
 void PlayerbotPaladinAI::DoNextCombatManeuver(Unit *pTarget)
 {
     PlayerbotAI* ai = GetAI();
@@ -83,217 +73,128 @@ void PlayerbotPaladinAI::DoNextCombatManeuver(Unit *pTarget)
             return;
     }
 
-	// ------- Non Duel combat ----------
-    
-        // damage spells
+    // damage spells
     ai->SetInFront( pTarget );
     Player *m_bot = GetPlayerBot();
-	Group *m_group = m_bot->GetGroup();
-            
-	uint32 masterHP = GetMaster()->GetHealth()*100 / GetMaster()->GetMaxHealth();
-    if (GetMaster()->isAlive())
-    {
-		if (masterHP < 80)
-            HealTarget (*GetMaster(), masterHP);
-    }
-
-    // Heal group
-    if( m_group )
-    {
-        Group::MemberSlotList const& groupSlot = m_group->GetMemberSlots();
-        for (Group::member_citerator itr = groupSlot.begin(); itr != groupSlot.end(); itr++)
-        {
-            Player *m_groupMember = objmgr.GetPlayer( itr->guid );
-            if( !m_groupMember || !m_groupMember->isAlive() )
-                continue;
-
-            uint32 memberHP = m_groupMember->GetHealth()*100 / m_groupMember->GetMaxHealth();
-            if( memberHP < 25 )
-                HealTarget( *m_groupMember, memberHP );
-        }
-    }
 
     //Shield master if low hp.
-    
+    uint32 masterHP = GetMaster()->GetHealth()*100 / GetMaster()->GetMaxHealth();
+
     if (GetMaster()->isAlive())
-	  
-        if (masterHP < 25 && HAND_OF_PROTECTION > 0 && !GetMaster()->GetAura(HAND_OF_PROTECTION, 0))
+        if (masterHP < 25 && HAND_OF_PROTECTION > 0 && !GetMaster()->HasAura(HAND_OF_PROTECTION, 0))
                 ai->CastSpell(HAND_OF_PROTECTION, *(GetMaster()));
-	    else if (masterHP < 25 && LAY_ON_HANDS > 0 && !GetMaster()->GetAura(LAY_ON_HANDS, 0))
-				ai->CastSpell(LAY_ON_HANDS, *(GetMaster()));
-	    
-   // COMBAT
+
+    if (SHADOW_RESISTANCE_AURA > 0 && !m_bot->HasAura(SHADOW_RESISTANCE_AURA, 0) && pTarget->getClass() == CLASS_WARLOCK)
+        ai->CastSpell (SHADOW_RESISTANCE_AURA, *m_bot);
+
+    if (DEVOTION_AURA > 0 && !m_bot->HasAura(DEVOTION_AURA, 0) && pTarget->getClass() == CLASS_WARRIOR)
+        ai->CastSpell (DEVOTION_AURA, *m_bot);
+
+    if (FIRE_RESISTANCE_AURA > 0 && !m_bot->HasAura(FIRE_RESISTANCE_AURA, 0) && pTarget->getClass() == CLASS_MAGE)
+        ai->CastSpell (FIRE_RESISTANCE_AURA, *m_bot);
+
+    if (RETRIBUTION_AURA > 0 && !m_bot->HasAura(RETRIBUTION_AURA, 0) && pTarget->getClass() == CLASS_PRIEST)
+        ai->CastSpell (RETRIBUTION_AURA, *m_bot);
+
+    if (DEVOTION_AURA > 0 && !m_bot->HasAura(DEVOTION_AURA, 0) && pTarget->getClass() == CLASS_SHAMAN)
+        ai->CastSpell (DEVOTION_AURA, *m_bot);
+
+    if (DEVOTION_AURA > 0 && !m_bot->HasAura(DEVOTION_AURA, 0) && pTarget->getClass() == CLASS_ROGUE)
+        ai->CastSpell (DEVOTION_AURA, *m_bot);
+
+    if (DEVOTION_AURA > 0 && !m_bot->HasAura(DEVOTION_AURA, 0) && pTarget->getClass() == CLASS_PALADIN)
+        ai->CastSpell (DEVOTION_AURA, *m_bot);
+
+    if (ai->GetHealthPercent() < 55)
+        SpellSequence = Healing;
+    else
+        SpellSequence = Combat;
 
     switch (SpellSequence)
     {
-        case SPELL_HOLY2:
-            if (CONCENTRATION_AURA > 0 && LastSpellHoly2 <= 1)
+        case Combat:
+            //ai->TellMaster("Combat");
+            if (JUDGEMENT_OF_LIGHT > 0 && CombatCounter < 1 && ai->GetManaPercent() >=15)
             {
-				GetAI()->TellMaster("I'm casting CONSECRATION AURA");
-                ai->CastSpell(CONCENTRATION_AURA);
-                SpellSequence = SPELL_PROTECTION2;
-                LastSpellHoly2 = LastSpellHoly2 +1;
+                ai->CastSpell (JUDGEMENT_OF_LIGHT, *pTarget);
+                //ai->TellMaster("Judgement");
+                CombatCounter++;
                 break;
             }
-			else if (CONSECRATION > 0 && LastSpellHoly2 <= 2)
+            else if (SEAL_OF_COMMAND > 0 && CombatCounter < 2 && ai->GetManaPercent() >= 25)
             {
-				GetAI()->TellMaster("I'm casting CONSECRATION");
-                ai->CastSpell(CONSECRATION);
-                SpellSequence = SPELL_PROTECTION2;
-                LastSpellHoly2 = LastSpellHoly2 +1;
+                ai->CastSpell (SEAL_OF_COMMAND, *m_bot);
+                //ai->TellMaster("SealC");
+                CombatCounter++;
                 break;
             }
-            else if (EXORCISM > 0 && LastSpellHoly2 <3)
+            else if (HAMMER_OF_JUSTICE > 0 && CombatCounter < 3 && ai->GetManaPercent() >=15)
             {
-				GetAI()->TellMaster("I'm casting exorcism");
-                ai->CastSpell(EXORCISM);
-                SpellSequence = SPELL_PROTECTION2;
-                LastSpellHoly2 = LastSpellHoly2 +1;
+                ai->CastSpell (HAMMER_OF_JUSTICE, *pTarget);
+                //ai->TellMaster("Hammer");
+                CombatCounter++;
                 break;
             }
-            else if (HOLY_WRATH > 0 && LastSpellHoly2 <4)
+            else if (CRUSADER_STRIKE > 0 && CombatCounter < 4 && ai->GetManaPercent() >=15)
             {
-                GetAI()->TellMaster("I'm casting holy wrath");
-                ai->CastSpell(HOLY_WRATH);
-                SpellSequence = SPELL_PROTECTION2;
-                LastSpellHoly2 = LastSpellHoly2 +1;
-                break;
-             }
-             else if (DIVINE_PLEA > 0 && LastSpellHoly2 <5)
-             {
-                 GetAI()->TellMaster("I'm casting divine plea");
-                 ai->CastSpell(DIVINE_PLEA);
-                 SpellSequence = SPELL_PROTECTION2;
-                 LastSpellHoly2 = LastSpellHoly2 +1;
-                 break;
-             }
-            else if (LastSpellHoly2 > 6)
-            {
-                LastSpellHoly2 = 0;
-                SpellSequence = SPELL_PROTECTION2;
+                ai->CastSpell (CRUSADER_STRIKE, *pTarget);
+                //ai->TellMaster("CStrike");
+                CombatCounter++;
                 break;
             }
-            LastSpellHoly2 = LastSpellHoly2 +1;
-
-        case SPELL_PROTECTION2:
-			if (DEVOTION_AURA > 0 && LastSpellProtection2 <1)
+            else if (CombatCounter < 5)
             {
-                GetAI()->TellMaster("I'm casting hand of DEVOTION AURA");
-                ai->CastSpell(DEVOTION_AURA);
-                SpellSequence = SPELL_RETRIBUTION;
-                LastSpellProtection2 = LastSpellProtection2 +1;
-                break;
-            }
-            else if (HAND_OF_RECKONING > 0 && LastSpellProtection2 <2)
-            {
-                GetAI()->TellMaster("I'm casting hand of reckoning");
-                ai->CastSpell(HAND_OF_RECKONING);
-                SpellSequence = SPELL_RETRIBUTION;
-                LastSpellProtection2 = LastSpellProtection2 +1;
-                break;
-            }
-            else if (SHIELD_OF_RIGHTEOUSNESS > 0 && LastSpellProtection2 <3)
-            {
-                GetAI()->TellMaster("I'm casting shield of righteousness");
-                ai->CastSpell(SHIELD_OF_RIGHTEOUSNESS);
-                SpellSequence = SPELL_RETRIBUTION;
-                LastSpellProtection2 = LastSpellProtection2 +1;
-                break;
-            }
-           else if (AVENGERS_SHIELD > 0 && LastSpellProtection2 <4)
-            {
-                GetAI()->TellMaster("I'm casting avengers shield.");
-                ai->CastSpell(AVENGERS_SHIELD);
-                SpellSequence = SPELL_RETRIBUTION;
-                (LastSpellProtection2 = LastSpellProtection2 +1);
-                break;
-            }
-            else if (HAMMER_OF_JUSTICE > 0 && LastSpellProtection2 <5)
-            {
-                GetAI()->TellMaster("I'm casting hammer of justice.");
-                ai->CastSpell(HAMMER_OF_JUSTICE);
-                SpellSequence = SPELL_RETRIBUTION;
-                LastSpellProtection2 = LastSpellProtection2 +1;
-                break;
-            }
-            else if (HAMMER_OF_RIGHTEOUS > 0 && LastSpellProtection2 <6)
-            {
-				GetAI()->TellMaster("I'm casting hammer of righteous.");
-                ai->CastSpell(HAMMER_OF_RIGHTEOUS);
-                SpellSequence = SPELL_RETRIBUTION;
-                LastSpellProtection2 = LastSpellProtection2 +1;
-                break;
-            }
-            else if (HOLY_SHEILD > 0 && LastSpellProtection2 <7)
-            {
-				GetAI()->TellMaster("I'm casting holy sheild.");
-                ai->CastSpell(HOLY_SHEILD);
-                SpellSequence = SPELL_RETRIBUTION;
-                LastSpellProtection2 = LastSpellProtection2 +1;
-                break;
-            }
-            else if (LastSpellProtection2 > 8)
-            {
-                LastSpellProtection2 = 0;
-                SpellSequence = SPELL_RETRIBUTION;
-                break;
-            }
-            LastSpellProtection2 = LastSpellProtection2 +1;
-
-        case SPELL_RETRIBUTION:
-			if (RETRIBUTION_AURA > 0 && LastSpellRetribution <1)
-            {
-                GetAI()->TellMaster("I'm casting judgement of RETRIBUTION AURA");
-                ai->CastSpell(RETRIBUTION_AURA);
-                SpellSequence = SPELL_HOLY2;
-                LastSpellRetribution = LastSpellRetribution + 1;
-                break;
-            }
-            else if (JUDGEMENT_OF_LIGHT > 0 && LastSpellRetribution <2)
-            {
-                GetAI()->TellMaster("I'm casting judgement of light");
-                ai->CastSpell(JUDGEMENT_OF_LIGHT);
-                SpellSequence = SPELL_HOLY2;
-                LastSpellRetribution = LastSpellRetribution + 1;
-                break;
-            }
-            else if (CRUSADER_STRIKE > 0 && LastSpellRetribution <3)
-            {
-                GetAI()->TellMaster("I'm casting crusader strike");
-                ai->CastSpell(CRUSADER_STRIKE);
-                SpellSequence = SPELL_HOLY2;
-                LastSpellRetribution = LastSpellRetribution + 1;
-                break;
-            }
-            else if (HAMMER_OF_WRATH > 0 && LastSpellRetribution <4)
-            {
-                GetAI()->TellMaster("I'm casting hammer of wrath");
-                ai->CastSpell(HAMMER_OF_WRATH);
-                SpellSequence = SPELL_HOLY2;
-                LastSpellRetribution = LastSpellRetribution + 1;
-                break;
-            }
-            else if (DIVINE_STORM > 0 && LastSpellRetribution <5)
-            {
-                GetAI()->TellMaster("I'm casting divine storm");
-                ai->CastSpell(DIVINE_STORM);
-                SpellSequence = SPELL_HOLY2;
-                LastSpellRetribution = LastSpellRetribution + 1;
-                break;
-            }
-            else if (LastSpellRetribution > 6)
-            {
-                LastSpellRetribution = 0;
-                SpellSequence = SPELL_HOLY2;
+                CombatCounter = 0;
+                //ai->TellMaster("CombatCounter Reset");
                 break;
             }
             else
             {
-                LastSpellRetribution = LastSpellRetribution + 1;
-                SpellSequence = SPELL_HOLY2;
+                CombatCounter = 0;
+                //ai->TellMaster("Counter = 0");
+                break;
+            }
+
+        case Healing:
+            //ai->TellMaster("Healing");
+            if (HOLY_LIGHT > 0 && HealCounter < 1 && ai->GetHealthPercent() < 45 && ai->GetManaPercent() >= 20)
+            {
+                ai->CastSpell (HOLY_LIGHT);
+                //ai->TellMaster("HLight1");
+                HealCounter++;
+                break;
+            }
+            else if (HOLY_LIGHT > 0 && HealCounter < 2 && ai->GetHealthPercent() < 75 && ai->GetManaPercent() >= 20)
+            {
+                ai->CastSpell (HOLY_LIGHT);
+                //ai->TellMaster("Hlight2");
+                HealCounter++;
+                break;
+            }
+            else if (HealCounter < 3)
+            {
+                HealCounter = 0;
+                //ai->TellMaster("HealCounter Reset");
+                break;
+            }
+            else
+            {
+                HealCounter = 0;
+                //ai->TellMaster("Counter = 0");
+                break;
             }
     }
+
+    if (HAMMER_OF_WRATH > 0 && pTarget->GetHealth() < pTarget->GetMaxHealth()*0.2 && ai->GetManaPercent() >=15)
+        ai->CastSpell(HAMMER_OF_WRATH, *pTarget);
+
+    if (AVENGING_WRATH > 0 && ai->GetManaPercent() >= 8)
+        ai->CastSpell(AVENGING_WRATH);
+
+    if (DIVINE_SHIELD > 0 && ai->GetHealthPercent() < 30 && ai->GetManaPercent() >= 3)
+        ai->CastSpell(DIVINE_SHIELD, *m_bot);
 }
+
 // CHANGE IT SO IT HEAL BOTH MASTER AND GROUP
 
 void PlayerbotPaladinAI::DoNonCombatActions()
@@ -383,7 +284,7 @@ void PlayerbotPaladinAI::DoNonCombatActions()
 
     Item* pItem = ai->FindDrink();
 
-    if (pItem != NULL && ai->GetManaPercent() < 40)
+    if (pItem != NULL && ai->GetManaPercent() < 50)
     {
         ai->TellMaster("I could use a drink.");
         ai->UseItem(*pItem);

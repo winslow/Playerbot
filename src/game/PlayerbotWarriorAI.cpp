@@ -22,8 +22,8 @@ PlayerbotWarriorAI::PlayerbotWarriorAI(Player* const master, Player* const bot, 
     BLOODRAGE               = ai->getSpellId("bloodrage"); //PROTECTION
     DEFENSIVE_STANCE        = ai->getSpellId("defensive stance"); //PROTECTION
     DEVASTATE               = ai->getSpellId("devastate");
-    SUNDER_ARMOR            = ai->getSpellId("sunder armor"); //PROTECTION  //7386;  
-    TAUNT                   = ai->getSpellId("taunt"); //PROTECTION//355;
+    SUNDER_ARMOR            = 7386; //ai->getSpellId("sunder armor"); //PROTECTION
+    TAUNT                   = 355; //ai->getSpellId("taunt"); //PROTECTION
     SHIELD_BASH             = ai->getSpellId("shield bash"); //PROTECTION
     REVENGE                 = ai->getSpellId("revenge"); //PROTECTION
     SHIELD_BLOCK            = ai->getSpellId("shield block"); //PROTECTION
@@ -72,7 +72,7 @@ void PlayerbotWarriorAI::DoNextCombatManeuver(Unit *pTarget)
     }
     // ------- Non Duel combat ----------
 
-    
+    //ai->Follow(*GetMaster()); // dont want to melee mob
 
     // Damage Attacks
 
@@ -101,11 +101,11 @@ void PlayerbotWarriorAI::DoNextCombatManeuver(Unit *pTarget)
     switch (SpellSequence)
     {
         case Tanking:
-            ai->TellMaster("Tanking");
-            if (DEFENSIVE_STANCE > 0 && !m_bot->GetAura(DEFENSIVE_STANCE, 0))//<------
+            //ai->TellMaster("Tanking");
+            if (DEFENSIVE_STANCE > 0 && !m_bot->HasAura(DEFENSIVE_STANCE, 0))
                 ai->CastSpell (DEFENSIVE_STANCE);
 
-            if (DEMORALIZING_SHOUT > 0 && !pTarget->GetAura(DEMORALIZING_SHOUT, 0) && ai->GetRageAmount() >= 10)//<------
+            if (DEMORALIZING_SHOUT > 0 && !pTarget->HasAura(DEMORALIZING_SHOUT, 0) && ai->GetRageAmount() >= 10)
                 ai->CastSpell (DEMORALIZING_SHOUT);
             else if (SHIELD_BLOCK > 0 && TankCounter < 1 && pVictim)
             {
@@ -167,7 +167,7 @@ void PlayerbotWarriorAI::DoNextCombatManeuver(Unit *pTarget)
                 TankCounter++;
                 break;
             }
-            else if (COMMANDING_SHOUT > 0 && TankCounter < 10 && !m_bot->GetAura(COMMANDING_SHOUT, 0) && ai->GetRageAmount() >= 10)//<------
+            else if (COMMANDING_SHOUT > 0 && TankCounter < 10 && !m_bot->HasAura(COMMANDING_SHOUT, 0) && ai->GetRageAmount() >= 10)
             {
                 ai->CastSpell (COMMANDING_SHOUT);
                 TankCounter++;
@@ -176,19 +176,19 @@ void PlayerbotWarriorAI::DoNextCombatManeuver(Unit *pTarget)
             else if (TankCounter < 11)
             {
                 TankCounter = 0;
-                ai->TellMaster("TankCounterReseter");
+                //ai->TellMaster("TankCounterReseter");
                 break;
             }
             else
             {
                 TankCounter = 0;
-                ai->TellMaster("TankCounterReseter");
+                //ai->TellMaster("TankCounterReseter");
                 break;
             }
             break;
 
         case Berserker:
-            ai->TellMaster("Berserker");
+            //ai->TellMaster("Berserker");
             if (BERSERKER_STANCE > 0 && !m_bot->HasAura(BERSERKER_STANCE, 0))
                 ai->CastSpell (BERSERKER_STANCE);
             else if (EXECUTE > 0 && BerserkerCounter < 1 && pTarget->GetHealth() < pTarget->GetMaxHealth()*0.2 && ai->GetRageAmount() >= 15)
@@ -206,36 +206,36 @@ void PlayerbotWarriorAI::DoNextCombatManeuver(Unit *pTarget)
             else if (BerserkerCounter < 3)
             {
                 BerserkerCounter = 0;
-                ai->TellMaster("BerserkerCounterReseter");
+                //ai->TellMaster("BerserkerCounterReseter");
                 break;
             }
             else
             {
                 BerserkerCounter = 0;
-                ai->TellMaster("BerserkerCounterReseter");
+                //ai->TellMaster("BerserkerCounterReseter");
                 break;
             }
             break;
 
         case SpellPreventing:
-            ai->TellMaster("Case SpellPreventing");
-            if (SPELL_REFLECTION > 0 && m_bot->GetAura(DEFENSIVE_STANCE, 0) && pVictim && pTarget->IsNonMeleeSpellCasted(true) && ai->GetRageAmount() >= 15)//<------
+            //ai->TellMaster("Case SpellPreventing");
+            if (SPELL_REFLECTION > 0 && m_bot->HasAura(DEFENSIVE_STANCE, 0) && pVictim && pTarget->IsNonMeleeSpellCasted(true) && ai->GetRageAmount() >= 15)
             {
                 if (pVictim == m_bot)
                 {
                     ai->CastSpell (SPELL_REFLECTION, *m_bot);
-                    ai->TellMaster("SpellRef");
+                    //ai->TellMaster("SpellRef");
                 }
             }
-            else if (PUMMEL > 0 && m_bot->GetAura(BERSERKER_STANCE, 0) && pTarget->IsNonMeleeSpellCasted(true) && ai->GetRageAmount() >= 10)//<------
+            else if (PUMMEL > 0 && m_bot->HasAura(BERSERKER_STANCE, 0) && pTarget->IsNonMeleeSpellCasted(true) && ai->GetRageAmount() >= 10)
             {
                 ai->CastSpell (PUMMEL, *pTarget);
-                ai->TellMaster("PUMMEL");
+                //ai->TellMaster("PUMMEL");
             }
             else
             {
                 ai->CastSpell (SHIELD_BASH, *pTarget);
-                ai->TellMaster("SHBash");
+                //ai->TellMaster("SHBash");
             }
             break;
     }
@@ -243,7 +243,6 @@ void PlayerbotWarriorAI::DoNextCombatManeuver(Unit *pTarget)
 
 void PlayerbotWarriorAI::DoNonCombatActions()
 {
-    PlayerbotAI* ai = GetAI();
     Player * m_bot = GetPlayerBot();
     if (!m_bot)
         return;
@@ -254,35 +253,35 @@ void PlayerbotWarriorAI::DoNonCombatActions()
     // With stance change can the shout change to. 
     // Inserted line to battle shout m_bot->HasAura( COMMANDING_SHOUT, 0 )
     // Natsukawa
-    if( ( (COMMANDING_SHOUT>0 && !m_bot->GetAura( COMMANDING_SHOUT, 0 )) ||     //<------
-        (BATTLE_SHOUT>0 && !m_bot->GetAura( BATTLE_SHOUT, 0 )) ) &&             //<------
-        ai->GetRageAmount()<10 && BLOODRAGE>0 && !m_bot->HasAura( BLOODRAGE, 0 ) )
+    if( ( (COMMANDING_SHOUT>0 && !m_bot->HasAura( COMMANDING_SHOUT, 0 )) ||
+        (BATTLE_SHOUT>0 && !m_bot->HasAura( BATTLE_SHOUT, 0 )) ) && 
+        GetAI()->GetRageAmount()<10 && BLOODRAGE>0 && !m_bot->HasAura( BLOODRAGE, 0 ) )
     {
         // we do have a useful shout, no rage coming but can cast bloodrage... do it
-        ai->CastSpell( BLOODRAGE, *m_bot );
+        GetAI()->CastSpell( BLOODRAGE, *m_bot );
     }
-    else if( COMMANDING_SHOUT>0 && !m_bot->GetAura( COMMANDING_SHOUT, 0 ) )   //<------
+    else if( COMMANDING_SHOUT>0 && !m_bot->HasAura( COMMANDING_SHOUT, 0 ) )
     {
         // use commanding shout now
-        ai->CastSpell( COMMANDING_SHOUT, *m_bot );
+        GetAI()->CastSpell( COMMANDING_SHOUT, *m_bot );
     }
-    else if( BATTLE_SHOUT>0 && !m_bot->GetAura( BATTLE_SHOUT, 0 ) && !m_bot->GetAura( COMMANDING_SHOUT, 0 ) )//<------
+    else if( BATTLE_SHOUT>0 && !m_bot->HasAura( BATTLE_SHOUT, 0 ) && !m_bot->HasAura( COMMANDING_SHOUT, 0 ) )
     {
         // use battle shout
-        ai->CastSpell( BATTLE_SHOUT, *m_bot );
+        GetAI()->CastSpell( BATTLE_SHOUT, *m_bot );
     }
 
     // hp check
     if (m_bot->getStandState() != UNIT_STAND_STATE_STAND)
         m_bot->SetStandState(UNIT_STAND_STATE_STAND);
 
-    Item* pItem = ai->FindFood();
+    Item* pItem = GetAI()->FindFood();
 
-    if (pItem != NULL && ai->GetHealthPercent() < 30)
+    if (pItem != NULL && GetAI()->GetHealthPercent() < 30)
     {
-        ai->TellMaster("I could use some food.");
-        ai->UseItem(*pItem);
-        ai->SetIgnoreUpdateTime(30);
+        GetAI()->TellMaster("I could use some food.");
+        GetAI()->UseItem(*pItem);
+        GetAI()->SetIgnoreUpdateTime(30);
         return;
     }
 } // end DoNonCombatActions

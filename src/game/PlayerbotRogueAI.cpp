@@ -40,6 +40,9 @@ PlayerbotRogueAI::~PlayerbotRogueAI() {}
 
 void PlayerbotRogueAI::DoNextCombatManeuver(Unit *pTarget)
 {
+    if( !pTarget )
+        return;
+
     PlayerbotAI* ai = GetAI();
     if (!ai)
         return;
@@ -51,17 +54,10 @@ void PlayerbotRogueAI::DoNextCombatManeuver(Unit *pTarget)
                 ai->CastSpell(SINISTER_STRIKE);
             return;
     }
-    // ------- Non Duel combat ----------
 
-    
-
-    // Damage Attacks
-
+    ai->SetInFront( pTarget );
     Player *m_bot = GetPlayerBot();
     Unit* pVictim = pTarget->getVictim();
-
-    if( !m_bot->HasInArc(M_PI, pTarget))
-        m_bot->SetInFront(pTarget);
 
     // TODO: make this work better...
     /*if (pVictim)
@@ -87,14 +83,18 @@ void PlayerbotRogueAI::DoNextCombatManeuver(Unit *pTarget)
 //        m_bot->RemoveAllSpellCooldown();
         GetAI()->TellMaster("AttackStop, CombatStop, Vanish");
     }*/
-    if (pVictim->HasAura(SPELL_AURA_PERIODIC_DAMAGE))
-    //if (ai->GetHealthPercent() < 40)         
-        ai->CastSpell (CLOAK_OF_SHADOWS);
-        //ai->TellMaster("CoS");
-            
-    if (pVictim == m_bot && ai->GetHealthPercent() < 40)
-        SpellSequence = Threat;
-    
+
+    if (pVictim)
+    {
+        if (pVictim->HasAura(SPELL_AURA_PERIODIC_DAMAGE))
+        {
+            ai->CastSpell(CLOAK_OF_SHADOWS, *m_bot);
+            GetAI()->TellMaster("CoS");
+        }
+
+        if (pVictim == m_bot && ai->GetHealthPercent() < 40)
+            SpellSequence = Threat;
+    }
     else
     {
         if (pTarget->IsNonMeleeSpellCasted(true))
@@ -108,7 +108,7 @@ void PlayerbotRogueAI::DoNextCombatManeuver(Unit *pTarget)
     {
         case Threat:
             out << "Case Threat";
-            if( EVASION>0 && ai->GetHealthPercent()<=35 && !m_bot->GetAura(EVASION,0) && ai->CastSpell(EVASION) )
+            if( EVASION>0 && ai->GetHealthPercent()<=35 && !m_bot->HasAura(EVASION,0) && ai->CastSpell(EVASION) )
                 out << " > Evasion";
             else if( FEINT>0 && ai->GetHealthPercent()<=25 && ai->GetEnergyAmount()>=20 && ai->CastSpell(FEINT) )
                 out << " > Feint";
@@ -173,7 +173,6 @@ void PlayerbotRogueAI::DoNextCombatManeuver(Unit *pTarget)
 
 void PlayerbotRogueAI::DoNonCombatActions()
 {
-    PlayerbotAI* ai = GetAI();
     Player * m_bot = GetPlayerBot();
     if (!m_bot)
         return;
@@ -182,13 +181,13 @@ void PlayerbotRogueAI::DoNonCombatActions()
     if (m_bot->getStandState() != UNIT_STAND_STATE_STAND)
         m_bot->SetStandState(UNIT_STAND_STATE_STAND);
 
-    Item* pItem = ai->FindFood();
+    Item* pItem = GetAI()->FindFood();
 
-    if (pItem != NULL && ai->GetHealthPercent() < 30)
+    if (pItem != NULL && GetAI()->GetHealthPercent() < 15)
     {
-        ai->TellMaster("I could use some food.");
-        ai->UseItem(*pItem);
-        ai->SetIgnoreUpdateTime(30);
+        GetAI()->TellMaster("I could use some food.");
+        GetAI()->UseItem(*pItem);
+        GetAI()->SetIgnoreUpdateTime(30);
         return;
     }
 /*

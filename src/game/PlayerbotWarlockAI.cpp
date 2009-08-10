@@ -4,14 +4,14 @@
 class PlayerbotAI;
 PlayerbotWarlockAI::PlayerbotWarlockAI(Player* const master, Player* const bot, PlayerbotAI* const ai): PlayerbotClassAI(master, bot, ai)
 {
-    // DESTRUCTION
-    SHADOW_BOLT           = ai->getSpellId("shadow bolt"); 
+	// DESTRUCTION
+    SHADOW_BOLT           = ai->getSpellId("shadow bolt");
     IMMOLATE              = ai->getSpellId("immolate");
     INCINERATE            = ai->getSpellId("incinerate");
     SEARING_PAIN          = ai->getSpellId("searing pain");
     CONFLAGRATE           = ai->getSpellId("conflagrate");
     SHADOWFURY            = ai->getSpellId("shadowfury");
-    CHAOS_BOLT            = ai->getSpellId("chaos bolt");
+	CHAOS_BOLT            = ai->getSpellId("chaos bolt");
 	SHADOWFLAME           = ai->getSpellId("shadowflame");
 	HELLFIRE              = ai->getSpellId("hellfire");
 	RAIN_OF_FIRE          = ai->getSpellId("rain of fire");
@@ -74,32 +74,26 @@ void PlayerbotWarlockAI::DoNextCombatManeuver(Unit *pTarget)
 
     // ------- Non Duel combat ----------
 
-    //ai->SetMovementOrder( PlayerbotAI::MOVEMENT_FOLLOW, GetMaster() ); // dont want to melee mob
+	ai->SetMovementOrder( PlayerbotAI::MOVEMENT_FOLLOW, GetMaster() ); // dont want to melee mob
 
-	// check for mana and life tap
-	if (ai->GetManaPercent() < 35)
-	{
-		GetAI()->TellMaster("I'm casting life tap");
-        ai->CastSpell(LIFE_TAP );
-	}
-// check for soul link with demon, also blood & dark pact with imp
+	// check for soul link with demon, also blood & dark pact with imp
     Pet *pet = m_bot->GetPet();
     if(( pet )
-		&& ( SOUL_LINK>0 && !m_bot->GetAura(SOUL_LINK,0) && ai->GetManaPercent() >= 16 && ai->CastSpell(SOUL_LINK,*m_bot) ))
+		&& ( SOUL_LINK>0 && !m_bot->HasAura(SOUL_LINK,0) && ai->GetManaPercent() >= 16 && ai->CastSpell(SOUL_LINK,*m_bot) ))
 		{
-			ai->TellMaster( "casting soul link." );
+			//ai->TellMaster( "casting soul link." );
 			return;
 		}
 	else if(( pet )
-		&& ( BLOOD_PACT>0 && !GetMaster()->GetAura(BLOOD_PACT,0) && ai->CastSpell(BLOOD_PACT,*m_bot) ))
+		&& ( BLOOD_PACT>0 && !GetMaster()->HasAura(BLOOD_PACT,0) && ai->CastSpell(BLOOD_PACT,*m_bot) ))
 		{
-			ai->TellMaster( "casting blood pact." );
+			//ai->TellMaster( "casting blood pact." );
 			return;
 		}
 	else if(( pet )
 		&& ( DARK_PACT>0 && ai->GetManaPercent() <= 75 && pet->GetPower(POWER_MANA) > 0 && ai->CastSpell(DARK_PACT,*m_bot) ))
 		{
-			ai->TellMaster( "casting dark pact." );
+			//ai->TellMaster( "casting dark pact." );
 			return;
 		}
 
@@ -109,35 +103,35 @@ void PlayerbotWarlockAI::DoNextCombatManeuver(Unit *pTarget)
     switch (SpellSequence)
     {
         case SPELL_CURSES:
-			if (CURSE_OF_AGONY > 0 && !pTarget->GetAura(CURSE_OF_AGONY, 0) && !pTarget->GetAura(SHADOWFLAME, 0) && LastSpellCurse < 1 && ai->GetManaPercent() >= 14)
+			if (CURSE_OF_AGONY > 0 && !pTarget->HasAura(CURSE_OF_AGONY, 0) && !pTarget->HasAura(SHADOWFLAME, 0) && LastSpellCurse < 1 && ai->GetManaPercent() >= 14)
             {
                 ai->CastSpell(CURSE_OF_AGONY, *pTarget);
                 SpellSequence = SPELL_AFFLICTION;
                 LastSpellCurse = LastSpellCurse +1;
                 break;
             }
-			else if (CURSE_OF_THE_ELEMENTS > 0 && !pTarget->GetAura(CURSE_OF_THE_ELEMENTS, 0) && !pTarget->GetAura(SHADOWFLAME, 0) && !pTarget->GetAura(CURSE_OF_AGONY, 0) && !pTarget->GetAura(CURSE_OF_WEAKNESS, 0) && LastSpellCurse < 2 && ai->GetManaPercent() >= 10)
+			else if (CURSE_OF_THE_ELEMENTS > 0 && !pTarget->HasAura(CURSE_OF_THE_ELEMENTS, 0) && !pTarget->HasAura(SHADOWFLAME, 0) && !pTarget->HasAura(CURSE_OF_AGONY, 0) && !pTarget->HasAura(CURSE_OF_WEAKNESS, 0) && LastSpellCurse < 2 && ai->GetManaPercent() >= 10)
             {
                 ai->CastSpell(CURSE_OF_THE_ELEMENTS, *pTarget);
                 SpellSequence = SPELL_AFFLICTION;
                 LastSpellCurse = LastSpellCurse +1;
                 break;
             }
-			else if (CURSE_OF_EXHAUSTION > 0 && !pTarget->GetAura(CURSE_OF_EXHAUSTION, 0) && !pTarget->GetAura(SHADOWFLAME, 0) && !pTarget->GetAura(CURSE_OF_WEAKNESS, 0) && !pTarget->GetAura(CURSE_OF_AGONY, 0) && !pTarget->GetAura(CURSE_OF_THE_ELEMENTS, 0) && LastSpellCurse < 3 && ai->GetManaPercent() >= 6)
+			else if (CURSE_OF_EXHAUSTION > 0 && !pTarget->HasAura(CURSE_OF_EXHAUSTION, 0) && !pTarget->HasAura(SHADOWFLAME, 0) && !pTarget->HasAura(CURSE_OF_WEAKNESS, 0) && !pTarget->HasAura(CURSE_OF_AGONY, 0) && !pTarget->HasAura(CURSE_OF_THE_ELEMENTS, 0) && LastSpellCurse < 3 && ai->GetManaPercent() >= 6)
             {
                 ai->CastSpell(CURSE_OF_EXHAUSTION, *pTarget);
                 SpellSequence = SPELL_AFFLICTION;
                 LastSpellCurse = LastSpellCurse +1;
                 break;
             }
-            else if (CURSE_OF_WEAKNESS > 0 && !pTarget->GetAura(CURSE_OF_WEAKNESS, 0) && !pTarget->GetAura(SHADOWFLAME, 0) && !pTarget->GetAura(CURSE_OF_EXHAUSTION, 0) && !pTarget->GetAura(CURSE_OF_AGONY, 0) && !pTarget->GetAura(CURSE_OF_THE_ELEMENTS, 0) && LastSpellCurse < 4 && ai->GetManaPercent() >= 14)
+            else if (CURSE_OF_WEAKNESS > 0 && !pTarget->HasAura(CURSE_OF_WEAKNESS, 0) && !pTarget->HasAura(SHADOWFLAME, 0) && !pTarget->HasAura(CURSE_OF_EXHAUSTION, 0) && !pTarget->HasAura(CURSE_OF_AGONY, 0) && !pTarget->HasAura(CURSE_OF_THE_ELEMENTS, 0) && LastSpellCurse < 4 && ai->GetManaPercent() >= 14)
             {
                 ai->CastSpell(CURSE_OF_WEAKNESS, *pTarget);
                 SpellSequence = SPELL_AFFLICTION;
                 LastSpellCurse = LastSpellCurse +1;
                 break;
             }
-            else if (CURSE_OF_TONGUES > 0 && !pTarget->GetAura(CURSE_OF_TONGUES, 0) && !pTarget->GetAura(SHADOWFLAME, 0) && !pTarget->GetAura(CURSE_OF_WEAKNESS, 0) && !pTarget->GetAura(CURSE_OF_EXHAUSTION, 0) && !pTarget->GetAura(CURSE_OF_AGONY, 0) && !pTarget->GetAura(CURSE_OF_THE_ELEMENTS, 0) && LastSpellCurse < 5 && ai->GetManaPercent() >= 4)
+            else if (CURSE_OF_TONGUES > 0 && !pTarget->HasAura(CURSE_OF_TONGUES, 0) && !pTarget->HasAura(SHADOWFLAME, 0) && !pTarget->HasAura(CURSE_OF_WEAKNESS, 0) && !pTarget->HasAura(CURSE_OF_EXHAUSTION, 0) && !pTarget->HasAura(CURSE_OF_AGONY, 0) && !pTarget->HasAura(CURSE_OF_THE_ELEMENTS, 0) && LastSpellCurse < 5 && ai->GetManaPercent() >= 4)
             {
                 ai->CastSpell(CURSE_OF_TONGUES, *pTarget);
                 SpellSequence = SPELL_AFFLICTION;
@@ -156,14 +150,14 @@ void PlayerbotWarlockAI::DoNextCombatManeuver(Unit *pTarget)
                 LastSpellAffliction = LastSpellAffliction +1;
                 break;
             }
-			else if (CORRUPTION > 0 && !pTarget->GetAura(CORRUPTION, 0) && !pTarget->GetAura(SHADOWFLAME, 0) && !pTarget->GetAura(SEED_OF_CORRUPTION, 0) && LastSpellAffliction < 2 && ai->GetManaPercent() >= 19)
+			else if (CORRUPTION > 0 && !pTarget->HasAura(CORRUPTION, 0) && !pTarget->HasAura(SHADOWFLAME, 0) && !pTarget->HasAura(SEED_OF_CORRUPTION, 0) && LastSpellAffliction < 2 && ai->GetManaPercent() >= 19)
             {
                 ai->CastSpell(CORRUPTION, *pTarget);
                 SpellSequence = SPELL_DESTRUCTION;
                 LastSpellAffliction = LastSpellAffliction +1;
                 break;
             }
-			else if (DRAIN_SOUL > 0 && pTarget->GetHealth() < pTarget->GetMaxHealth()*0.40 && !pTarget->GetAura(DRAIN_SOUL, 0) && LastSpellAffliction < 3 && ai->GetManaPercent() >= 19)
+			else if (DRAIN_SOUL > 0 && pTarget->GetHealth() < pTarget->GetMaxHealth()*0.40 && !pTarget->HasAura(DRAIN_SOUL, 0) && LastSpellAffliction < 3 && ai->GetManaPercent() >= 19)
             {
                 ai->CastSpell(DRAIN_SOUL, *pTarget);
 				ai->SetIgnoreUpdateTime(15);
@@ -171,7 +165,7 @@ void PlayerbotWarlockAI::DoNextCombatManeuver(Unit *pTarget)
                 LastSpellAffliction = LastSpellAffliction +1;
                 break;
             }
-            else if (DRAIN_LIFE > 0 && LastSpellAffliction < 4 && !pTarget->GetAura(DRAIN_SOUL, 0) && !pTarget->GetAura(SEED_OF_CORRUPTION, 0) && !pTarget->GetAura(DRAIN_LIFE, 0) && !pTarget->GetAura(DRAIN_MANA, 0) && ai->GetHealthPercent() <= 70 && ai->GetManaPercent() >= 23)
+            else if (DRAIN_LIFE > 0 && LastSpellAffliction < 4 && !pTarget->HasAura(DRAIN_SOUL, 0) && !pTarget->HasAura(SEED_OF_CORRUPTION, 0) && !pTarget->HasAura(DRAIN_LIFE, 0) && !pTarget->HasAura(DRAIN_MANA, 0) && ai->GetHealthPercent() <= 70 && ai->GetManaPercent() >= 23)
             {
                 ai->CastSpell(DRAIN_LIFE, *pTarget);
 				ai->SetIgnoreUpdateTime(5);
@@ -179,7 +173,7 @@ void PlayerbotWarlockAI::DoNextCombatManeuver(Unit *pTarget)
                 LastSpellAffliction = LastSpellAffliction +1;
                 break;
             }
-			else if (DRAIN_MANA > 0 && pTarget->GetPower(POWER_MANA) > 0 && !pTarget->GetAura(DRAIN_SOUL, 0) && !pTarget->GetAura(DRAIN_MANA, 0) && !pTarget->GetAura(SEED_OF_CORRUPTION, 0) && !pTarget->GetAura(DRAIN_LIFE, 0) && LastSpellAffliction < 5 && ai->GetManaPercent() < 70 && ai->GetManaPercent() >= 17)
+			else if (DRAIN_MANA > 0 && pTarget->GetPower(POWER_MANA) > 0 && !pTarget->HasAura(DRAIN_SOUL, 0) && !pTarget->HasAura(DRAIN_MANA, 0) && !pTarget->HasAura(SEED_OF_CORRUPTION, 0) && !pTarget->HasAura(DRAIN_LIFE, 0) && LastSpellAffliction < 5 && ai->GetManaPercent() < 70 && ai->GetManaPercent() >= 17)
             {
                 ai->CastSpell(DRAIN_MANA, *pTarget);
 				ai->SetIgnoreUpdateTime(5);
@@ -187,35 +181,35 @@ void PlayerbotWarlockAI::DoNextCombatManeuver(Unit *pTarget)
                 LastSpellAffliction = LastSpellAffliction +1;
                 break;
             }
-            else if (UNSTABLE_AFFLICTION > 0 && LastSpellAffliction < 6 && !pTarget->GetAura(UNSTABLE_AFFLICTION, 0) && !pTarget->GetAura(SHADOWFLAME, 0) && ai->GetManaPercent() >= 20)
+            else if (UNSTABLE_AFFLICTION > 0 && LastSpellAffliction < 6 && !pTarget->HasAura(UNSTABLE_AFFLICTION, 0) && !pTarget->HasAura(SHADOWFLAME, 0) && ai->GetManaPercent() >= 20)
             {
                 ai->CastSpell(UNSTABLE_AFFLICTION, *pTarget);
                 SpellSequence = SPELL_DESTRUCTION;
                 LastSpellAffliction = LastSpellAffliction +1;
                 break;
             }
-            else if (HAUNT > 0 && LastSpellAffliction < 7 && !pTarget->GetAura(HAUNT, 0) && ai->GetManaPercent() >= 12)
+            else if (HAUNT > 0 && LastSpellAffliction < 7 && !pTarget->HasAura(HAUNT, 0) && ai->GetManaPercent() >= 12)
             {
                 ai->CastSpell(HAUNT, *pTarget);
                 SpellSequence = SPELL_DESTRUCTION;
                 LastSpellAffliction = LastSpellAffliction +1;
                 break;
             }
-            else if (ATROCITY > 0 && !pTarget->GetAura(ATROCITY, 0) && LastSpellAffliction < 8 && ai->GetManaPercent() >= 21)
+            else if (ATROCITY > 0 && !pTarget->HasAura(ATROCITY, 0) && LastSpellAffliction < 8 && ai->GetManaPercent() >= 21)
             {
                 ai->CastSpell(ATROCITY, *pTarget);
                 SpellSequence = SPELL_DESTRUCTION;
                 LastSpellAffliction = LastSpellAffliction +1;
                 break;
             }
-            else if (SEED_OF_CORRUPTION > 0 && !pTarget->GetAura(SEED_OF_CORRUPTION, 0) && LastSpellAffliction < 9 && ai->GetManaPercent() >= 34)
+            else if (SEED_OF_CORRUPTION > 0 && !pTarget->HasAura(SEED_OF_CORRUPTION, 0) && LastSpellAffliction < 9 && ai->GetManaPercent() >= 34)
             {
                 ai->CastSpell(SEED_OF_CORRUPTION, *pTarget);
                 SpellSequence = SPELL_DESTRUCTION;
                 LastSpellAffliction = LastSpellAffliction +1;
                 break;
             }
-			else if (HOWL_OF_TERROR > 0 && !pTarget->GetAura(HOWL_OF_TERROR, 0) && ai->GetAttackerCount()>3 && LastSpellAffliction < 10 && ai->GetManaPercent() >= 11)
+			else if (HOWL_OF_TERROR > 0 && !pTarget->HasAura(HOWL_OF_TERROR, 0) && ai->GetAttackerCount()>3 && LastSpellAffliction < 10 && ai->GetManaPercent() >= 11)
             {
                 ai->CastSpell(HOWL_OF_TERROR, *pTarget);
                 SpellSequence = SPELL_DESTRUCTION;
@@ -243,14 +237,14 @@ void PlayerbotWarlockAI::DoNextCombatManeuver(Unit *pTarget)
                   LastSpellDestruction = LastSpellDestruction + 1;
                   break;
               }
-			  else if (SHADOWFLAME > 0 && !pTarget->GetAura(SHADOWFLAME, 0) && LastSpellDestruction < 3 && ai->GetManaPercent() >= 25)
+			  else if (SHADOWFLAME > 0 && !pTarget->HasAura(SHADOWFLAME, 0) && LastSpellDestruction < 3 && ai->GetManaPercent() >= 25)
               {
                   ai->CastSpell(SHADOWFLAME, *pTarget);
                   SpellSequence = SPELL_CURSES;
                   LastSpellDestruction = LastSpellDestruction + 1;
                   break;
               }
-              else if (IMMOLATE > 0 && !pTarget->GetAura(IMMOLATE, 0) && !pTarget->GetAura(SHADOWFLAME, 0) && LastSpellDestruction < 4 && ai->GetManaPercent() >= 23)
+              else if (IMMOLATE > 0 && !pTarget->HasAura(IMMOLATE, 0) && !pTarget->HasAura(SHADOWFLAME, 0) && LastSpellDestruction < 4 && ai->GetManaPercent() >= 23)
               {
                   ai->CastSpell(IMMOLATE, *pTarget);
                   SpellSequence = SPELL_CURSES;
@@ -286,7 +280,7 @@ void PlayerbotWarlockAI::DoNextCombatManeuver(Unit *pTarget)
                   LastSpellDestruction = LastSpellDestruction + 1;
                   break;
               }
-              else if (SHADOWFURY > 0 && LastSpellDestruction < 9 && !pTarget->GetAura(SHADOWFURY, 0) && ai->GetManaPercent() >= 37)
+              else if (SHADOWFURY > 0 && LastSpellDestruction < 9 && !pTarget->HasAura(SHADOWFURY, 0) && ai->GetManaPercent() >= 37)
               {
                   ai->CastSpell(SHADOWFURY, *pTarget);
                   SpellSequence = SPELL_CURSES;
@@ -300,14 +294,14 @@ void PlayerbotWarlockAI::DoNextCombatManeuver(Unit *pTarget)
                   LastSpellDestruction = LastSpellDestruction + 1;
                   break;
               }
-			  else if (SHADOWBURN > 0 && LastSpellDestruction < 11 && pTarget->GetHealth() < pTarget->GetMaxHealth()*0.20 && !pTarget->GetAura(SHADOWBURN, 0) && ai->GetManaPercent() >= 27)
+			  else if (SHADOWBURN > 0 && LastSpellDestruction < 11 && pTarget->GetHealth() < pTarget->GetMaxHealth()*0.20 && !pTarget->HasAura(SHADOWBURN, 0) && ai->GetManaPercent() >= 27)
               {
                   ai->CastSpell(SHADOWBURN, *pTarget);
                   SpellSequence = SPELL_CURSES;
                   LastSpellDestruction = LastSpellDestruction + 1;
                   break;
               }
-			  else if (HELLFIRE > 0 && LastSpellDestruction < 12 && !m_bot->GetAura(HELLFIRE, 0) && ai->GetAttackerCount()>=5 && ai->GetHealthPercent() >= 10 && ai->GetManaPercent() >= 87)
+			  else if (HELLFIRE > 0 && LastSpellDestruction < 12 && !m_bot->HasAura(HELLFIRE, 0) && ai->GetAttackerCount()>=5 && ai->GetHealthPercent() >= 10 && ai->GetManaPercent() >= 87)
               {
                   ai->CastSpell(HELLFIRE);
 				  ai->TellMaster("casting hellfire!");
@@ -326,7 +320,6 @@ void PlayerbotWarlockAI::DoNextCombatManeuver(Unit *pTarget)
 
 void PlayerbotWarlockAI::DoNonCombatActions()
 {
-    PlayerbotAI* ai = GetAI();
     Player * m_bot = GetPlayerBot();
     if (!m_bot)
         return;
@@ -335,24 +328,23 @@ void PlayerbotWarlockAI::DoNonCombatActions()
 
     // buff myself  DEMON_SKIN, DEMON_ARMOR, FEL_ARMOR
     if (FEL_ARMOR > 0)
-        (!m_bot->GetAura(FEL_ARMOR, 0) && ai->CastSpell(FEL_ARMOR, *m_bot));
+        (!m_bot->HasAura(FEL_ARMOR, 0) && GetAI()->CastSpell(FEL_ARMOR, *m_bot));
     else if (DEMON_ARMOR > 0)
-        (!m_bot->GetAura(DEMON_ARMOR, 0) && !m_bot->GetAura(FEL_ARMOR, 0) && ai->CastSpell(DEMON_ARMOR, *m_bot));
+        (!m_bot->HasAura(DEMON_ARMOR, 0) && !m_bot->HasAura(FEL_ARMOR, 0) && GetAI()->CastSpell(DEMON_ARMOR, *m_bot));
     else if (DEMON_SKIN > 0)
-        (!m_bot->GetAura(DEMON_SKIN, 0) && !m_bot->GetAura(FEL_ARMOR, 0) && !m_bot->GetAura(DEMON_ARMOR, 0) && ai->CastSpell(DEMON_SKIN, *m_bot));
-
+        (!m_bot->HasAura(DEMON_SKIN, 0) && !m_bot->HasAura(FEL_ARMOR, 0) && !m_bot->HasAura(DEMON_ARMOR, 0) && GetAI()->CastSpell(DEMON_SKIN, *m_bot));
 
     // mana check
     if (m_bot->getStandState() != UNIT_STAND_STATE_STAND)
         m_bot->SetStandState(UNIT_STAND_STATE_STAND);
 
-    Item* pItem = ai->FindDrink();
+    Item* pItem = GetAI()->FindDrink();
 
-    if (pItem != NULL && ai->GetManaPercent() < 50)
+    if (pItem != NULL && GetAI()->GetManaPercent() < 15)
     {
-        ai->TellMaster("I could use a drink.");
-        ai->UseItem(*pItem);
-        ai->SetIgnoreUpdateTime(30);
+        GetAI()->TellMaster("I could use a drink.");
+        GetAI()->UseItem(*pItem);
+        GetAI()->SetIgnoreUpdateTime(30);
         return;
     }
 
@@ -360,30 +352,29 @@ void PlayerbotWarlockAI::DoNonCombatActions()
     if (m_bot->getStandState() != UNIT_STAND_STATE_STAND)
         m_bot->SetStandState(UNIT_STAND_STATE_STAND);
 
-    pItem = ai->FindFood();
+    pItem = GetAI()->FindFood();
 
-    if (pItem != NULL && ai->GetHealthPercent() < 30)
+    if (pItem != NULL && GetAI()->GetHealthPercent() < 15)
     {
-        ai->TellMaster("I could use some food.");
-        ai->UseItem(*pItem);
-        ai->SetIgnoreUpdateTime(30);
+        GetAI()->TellMaster("I could use some food.");
+        GetAI()->UseItem(*pItem);
+        GetAI()->SetIgnoreUpdateTime(30);
         return;
     }
 
-     // check for demon
+    // check for demon
     if( SUMMON_IMP>0 && !m_demonSummonFailed )
     {
         Pet *pet = m_bot->GetPet();
         if( !pet )
         {
             // summon demon (only imp for now)
-            if( SUMMON_IMP>0 && ai->GetManaPercent() >= 64 && ai->CastSpell(SUMMON_IMP,*m_bot) )
-                ai->TellMaster( "summoning demon." );
+            if( SUMMON_IMP>0 && GetAI()->GetManaPercent() >= 64 && GetAI()->CastSpell(SUMMON_IMP,*m_bot) )
+                GetAI()->TellMaster( "summoning demon." );
             else
             {
                 m_demonSummonFailed = true;
-                ai->TellMaster( "summon demon failed!" );
-                return;
+                //GetAI()->TellMaster( "summon demon failed!" );
             }
         }
     }

@@ -11,7 +11,7 @@ enum
     SPELL_DEMONOLOGY
 };
 
- //class Player;
+//class Player;
 class MANGOS_DLL_SPEC PlayerbotWarlockAI : PlayerbotClassAI
 {
     public:

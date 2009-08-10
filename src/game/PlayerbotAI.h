@@ -132,10 +132,10 @@ class MANGOS_DLL_SPEC PlayerbotAI
 
         // get current casting spell (will return NULL if no spell!)
         Spell* GetCurrentSpell() const;
-
-        bool GetAura(uint32 spellId, const Unit& player) const;
-        bool GetAura(const char* spellName, const Unit& player) const;
-        bool GetAura(const char* spellName) const;
+        
+        bool HasAura(uint32 spellId, const Unit& player) const;
+        bool HasAura(const char* spellName, const Unit& player) const;
+        bool HasAura(const char* spellName) const;
 
         uint8 GetHealthPercent(const Unit& target) const;
         uint8 GetHealthPercent() const;

@@ -815,7 +815,7 @@ uint8 PlayerbotAI::GetRunicPower() const
 typedef std::pair<uint32, uint8> spellEffectPair;
 typedef std::multimap<spellEffectPair, Aura*> AuraMap;
 
-bool PlayerbotAI::GetAura(uint32 spellId, const Unit& player) const
+bool PlayerbotAI::HasAura(uint32 spellId, const Unit& player) const
 {
     for (AuraMap::const_iterator iter = player.GetAuras().begin(); iter != player.GetAuras().end(); ++iter)
     {
@@ -825,15 +825,15 @@ bool PlayerbotAI::GetAura(uint32 spellId, const Unit& player) const
     return false;
 }
 
-bool PlayerbotAI::GetAura(const char* spellName) const
+bool PlayerbotAI::HasAura(const char* spellName) const
 {
-    return GetAura(spellName, *m_bot);
+    return HasAura(spellName, *m_bot);
 }
 
-bool PlayerbotAI::GetAura(const char* spellName, const Unit& player) const
+bool PlayerbotAI::HasAura(const char* spellName, const Unit& player) const
 {
     uint32 spellId = getSpellId(spellName);
-    return (spellId) ? GetAura(spellId, player) : false;
+    return (spellId) ? HasAura(spellId, player) : false;
 }
 
 // looks through all items / spells that bot could have to get a mount
@@ -1946,7 +1946,7 @@ bool PlayerbotAI::CastSpell(uint32 spellId)
         }
     }
 
-    if (GetAura(spellId, *pTarget))
+    if (HasAura(spellId, *pTarget))
         return false;
 
     m_bot->CastSpell(pTarget, pSpellInfo, false);
