@@ -305,14 +305,14 @@ void PlayerbotDeathKnightAI::DoNextCombatManeuver(Unit *pTarget)
                LastSpellBloodDK = LastSpellBloodDK +1;
                break;
            }
-           else if (DEATH_PACT > 0 && ai->GetHealthPercent() < 50 && LastSpellBloodDK < 9 && ai->GetRunicPower() >= 40)
+           /*else if (DEATH_PACT > 0 && ai->GetHealthPercent() < 50 && LastSpellBloodDK < 9 && ai->GetRunicPower() >= 40)
            {
                ai->CastSpell(DEATH_PACT);
                SpellSequence = SPELL_DK_UNHOLY;
                LastSpellBloodDK = LastSpellBloodDK +1;
                break;
-           }
-           else if (LastSpellBloodDK > 10)
+           }*/
+           else if (LastSpellBloodDK > 9)
            {
                LastSpellBloodDK = 0;
                SpellSequence = SPELL_DK_UNHOLY;
