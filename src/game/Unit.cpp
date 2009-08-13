@@ -452,9 +452,10 @@ uint32 Unit::DealDamage(Unit *pVictim, uint32 damage, CleanDamage const* cleanDa
         if(cInfo && cInfo->lootid)
             pVictim->SetUInt32Value(UNIT_DYNAMIC_FLAGS, UNIT_DYNFLAG_LOOTABLE);
 
-        // some critters required for quests
+        // some critters required for quests (need normal entry instead possible heroic in any cases)
         if(GetTypeId() == TYPEID_PLAYER)
-            ((Player*)this)->KilledMonster(cInfo ,pVictim->GetGUID());
+            if(CreatureInfo const* normalInfo = objmgr.GetCreatureTemplate(pVictim->GetEntry()))
+                ((Player*)this)->KilledMonster(normalInfo,pVictim->GetGUID());
 
         return damage;
     }
@@ -5567,6 +5568,10 @@ bool Unit::HandleDummyAuraProc(Unit *pVictim, uint32 damage, Aura* triggeredByAu
                 case 31876:
                 case 31877:
                 case 31878:
+                    // triggered only at casted Judgement spells, not at additional Judgement effects
+                    if(!procSpell || procSpell->Category != 1210)
+                        return false;
+
                     target = this;
                     triggered_spell_id = 31930;
 
@@ -11036,7 +11041,7 @@ void Unit::ProcDamageAndSpellFor( bool isVictim, Unit * pTarget, uint32 procFlag
                 sLog.outDebug("ProcDamageAndSpell: casting mending (triggered by %s dummy aura of spell %u)",
                     (isVictim?"a victim's":"an attacker's"),triggeredByAura->GetId());
 
-                HandleMeandingAuraProc(triggeredByAura);
+                HandleMendingAuraProc(triggeredByAura);
                 break;
             }
             case SPELL_AURA_PROC_TRIGGER_SPELL_WITH_VALUE:
@@ -11816,7 +11821,7 @@ bool Unit::IsTriggeredAtSpellProcEvent(Unit *pVictim, Aura* aura, SpellEntry con
     return roll_chance_f(chance);
 }
 
-bool Unit::HandleMeandingAuraProc( Aura* triggeredByAura )
+bool Unit::HandleMendingAuraProc( Aura* triggeredByAura )
 {
     // aura can be deleted at casts
     SpellEntry const* spellProto = triggeredByAura->GetSpellProto();
@@ -11854,9 +11859,14 @@ bool Unit::HandleMeandingAuraProc( Aura* triggeredByAura )
                 mod->mask  = spellProto->SpellFamilyFlags;
                 mod->mask2 = spellProto->SpellFamilyFlags2;
 
+                // remove before apply next (locked against deleted)
+                triggeredByAura->SetInUse(true);
+                RemoveAurasByCasterSpell(spellProto->Id,caster->GetGUID());
+
                 caster->AddSpellMod(mod, true);
                 CastCustomSpell(target,spellProto->Id,&heal,NULL,NULL,true,NULL,triggeredByAura,caster->GetGUID());
                 caster->AddSpellMod(mod, false);
+                triggeredByAura->SetInUse(false);
             }
         }
     }

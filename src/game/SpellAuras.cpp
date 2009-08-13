@@ -2377,6 +2377,19 @@ void Aura::HandleAuraDummy(bool apply, bool Real)
                     ((Player*)m_target)->AddSpellMod(m_spellmod, apply);
                     return;
                 }
+                case 52610:                                 // Savage Roar
+                {
+                    if(apply)
+                    {
+                        if(m_target->m_form != FORM_CAT)
+                            return;
+
+                        m_target->CastSpell(m_target, 62071, true);
+                    }
+                    else
+                        m_target-> RemoveAurasDueToSpell(62071);
+                    return;
+                }
                 case 61336:                                 // Survival Instincts
                 {
                     if(apply)
@@ -2709,10 +2722,12 @@ void Aura::HandleAuraModShapeshift(bool apply, bool Real)
             {
                 SpellEntry const* aurSpellInfo = (*iter)->GetSpellProto();
 
+                uint32 aurMechMask = GetAllSpellMechanicMask(aurSpellInfo);
+
                 // If spell that caused this aura has Croud Control or Daze effect
-                if((GetAllSpellMechanicMask(aurSpellInfo) & MECHANIC_NOT_REMOVED_BY_SHAPESHIFT) ||
-                    // some Daze spells have these parameters instead of MECHANIC_DAZE
-                    (aurSpellInfo->SpellIconID == 15 && aurSpellInfo->Dispel == 0))
+                if((aurMechMask & MECHANIC_NOT_REMOVED_BY_SHAPESHIFT) ||
+                    // some Daze spells have these parameters instead of MECHANIC_DAZE (skip snare spells)
+                    aurSpellInfo->SpellIconID == 15 && aurSpellInfo->Dispel == 0 && (aurMechMask & (1 << MECHANIC_SNARE))==0)
                 {
                     ++iter;
                     continue;
@@ -5354,7 +5369,9 @@ void Aura::HandleShapeshiftBoosts(bool apply)
     uint32 HotWSpellId = 0;
     uint32 MasterShaperSpellId = 0;
 
-    switch(GetModifier()->m_miscvalue)
+    uint32 form = GetModifier()->m_miscvalue;
+
+    switch(form)
     {
         case FORM_CAT:
             spellId = 3025;
@@ -5426,8 +5443,6 @@ void Aura::HandleShapeshiftBoosts(bool apply)
             break;
     }
 
-    uint32 form = GetModifier()->m_miscvalue-1;
-
     if(apply)
     {
         if (spellId) m_target->CastSpell(m_target, spellId, true, NULL, this );
@@ -5443,7 +5458,7 @@ void Aura::HandleShapeshiftBoosts(bool apply)
                 SpellEntry const *spellInfo = sSpellStore.LookupEntry(itr->first);
                 if (!spellInfo || !(spellInfo->Attributes & (SPELL_ATTR_PASSIVE | (1<<7))))
                     continue;
-                if (spellInfo->Stances & (1<<form))
+                if (spellInfo->Stances & (1<<(form-1)))
                     m_target->CastSpell(m_target, itr->first, true, NULL, this);
             }
 
@@ -5466,9 +5481,13 @@ void Aura::HandleShapeshiftBoosts(bool apply)
             if (((Player*)m_target)->HasSpell(17007))
             {
                 SpellEntry const *spellInfo = sSpellStore.LookupEntry(24932);
-                if (spellInfo && spellInfo->Stances & (1<<form))
+                if (spellInfo && spellInfo->Stances & (1<<(form-1)))
                     m_target->CastSpell(m_target, 24932, true, NULL, this);
             }
+
+            // Savage Roar
+            if (((Player*)m_target)->HasAura(52610) && form == FORM_CAT)
+                m_target->CastSpell(m_target, 62071, true);            
 
             // Heart of the Wild
             if (HotWSpellId)
@@ -5507,9 +5526,6 @@ void Aura::HandleShapeshiftBoosts(bool apply)
                 ++itr;
         }
     }
-
-    /*double healthPercentage = (double)m_target->GetHealth() / (double)m_target->GetMaxHealth();
-    m_target->SetHealth(uint32(ceil((double)m_target->GetMaxHealth() * healthPercentage)));*/
 }
 
 void Aura::HandleSpellSpecificBoosts(bool apply)
@@ -5598,15 +5614,18 @@ void Aura::HandleSpellSpecificBoosts(bool apply)
             return;
     }
 
+    // prevent aura deletion, specially in multi-boost case
+    SetInUse(true);
+
     if (apply)
     {
         if (spellId1)
             m_target->CastSpell(m_target, spellId1, true, NULL, this);
-        if (spellId2)
+        if (spellId2 && !IsDeleted())
             m_target->CastSpell(m_target, spellId2, true, NULL, this);
-        if (spellId3)
+        if (spellId3 && !IsDeleted())
             m_target->CastSpell(m_target, spellId3, true, NULL, this);
-        if (spellId4)
+        if (spellId4 && !IsDeleted())
             m_target->CastSpell(m_target, spellId4, true, NULL, this);
     }
     else
@@ -5620,6 +5639,8 @@ void Aura::HandleSpellSpecificBoosts(bool apply)
         if (spellId4)
             m_target->RemoveAurasByCasterSpell(spellId4, GetCasterGUID());
     }
+
+    SetInUse(false);
 }
 
 void Aura::HandleAuraEmpathy(bool apply, bool /*Real*/)

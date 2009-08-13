@@ -399,11 +399,14 @@ bool IsPositiveEffect(uint32 spellId, uint32 effIndex)
                     if(spellproto->Id == 17624)
                         return false;
                     break;
+                case SPELL_AURA_MOD_PACIFY_SILENCE:
+                    if(spellproto->Id == 24740)             // Wisp Costume
+                        return true;
+                    return false;
                 case SPELL_AURA_MOD_ROOT:
                 case SPELL_AURA_MOD_SILENCE:
                 case SPELL_AURA_GHOST:
                 case SPELL_AURA_PERIODIC_LEECH:
-                case SPELL_AURA_MOD_PACIFY_SILENCE:
                 case SPELL_AURA_MOD_STALKED:
                 case SPELL_AURA_PERIODIC_DAMAGE_PERCENT:
                     return false;
@@ -1410,6 +1413,10 @@ bool SpellMgr::IsNoStackSpellDueToSpell(uint32 spellId_1, uint32 spellId_2) cons
 
                 // Survival Instincts and Survival Instincts
                 if( spellInfo_1->Id == 61336 && spellInfo_2->Id == 50322 || spellInfo_2->Id == 61336 && spellInfo_1->Id == 50322 )
+                    return false;
+
+                // Savage Roar and Savage Roar (triggered)
+                if (spellInfo_1->SpellIconID == 2865 && spellInfo_2->SpellIconID == 2865)
                     return false;
             }
 
