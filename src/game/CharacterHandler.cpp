@@ -86,6 +86,7 @@ bool LoginQueryHolder::Initialize()
     res &= SetPQuery(PLAYER_LOGIN_QUERY_LOADCRITERIAPROGRESS,"SELECT criteria, counter, date FROM character_achievement_progress WHERE guid = '%u'", GUID_LOPART(m_guid));
     res &= SetPQuery(PLAYER_LOGIN_QUERY_LOADEQUIPMENTSETS,   "SELECT setguid, setindex, name, iconname, item0, item1, item2, item3, item4, item5, item6, item7, item8, item9, item10, item11, item12, item13, item14, item15, item16, item17, item18 FROM character_equipmentsets WHERE guid = '%u' ORDER BY setindex", GUID_LOPART(m_guid));
     res &= SetPQuery(PLAYER_LOGIN_QUERY_LOADBGDATA,          "SELECT instance_id, team, join_x, join_y, join_z, join_o, join_map, taxi_start, taxi_end, mount_spell FROM character_battleground_data WHERE guid = '%u'", GUID_LOPART(m_guid));
+    res &= SetPQuery(PLAYER_LOGIN_QUERY_LOADACCOUNTDATA,     "SELECT type, time, data FROM character_account_data WHERE guid='%u'", GUID_LOPART(m_guid));
 
     return res;
 }
@@ -146,9 +147,6 @@ class CharacterHandler
 
 void WorldSession::HandleCharEnum(QueryResult * result)
 {
-    // keys can be non cleared if player open realm list and close it by 'cancel'
-    loginDatabase.PExecute("UPDATE account SET v = '0', s = '0' WHERE id = '%u'", GetAccountId());
-
     WorldPacket data(SMSG_CHAR_ENUM, 100);                  // we guess size
 
     uint8 num = 0;
@@ -206,15 +204,10 @@ void WorldSession::HandleCharEnumOpcode( WorldPacket & /*recv_data*/ )
 
 void WorldSession::HandleCharCreateOpcode( WorldPacket & recv_data )
 {
-    CHECK_PACKET_SIZE(recv_data,1+1+1+1+1+1+1+1+1+1);
-
     std::string name;
     uint8 race_,class_;
 
     recv_data >> name;
-
-    // recheck with known string size
-    CHECK_PACKET_SIZE(recv_data,(name.size()+1)+1+1+1+1+1+1+1+1+1);
 
     recv_data >> race_;
     recv_data >> class_;
@@ -500,8 +493,6 @@ void WorldSession::HandleCharCreateOpcode( WorldPacket & recv_data )
 
 void WorldSession::HandleCharDeleteOpcode( WorldPacket & recv_data )
 {
-    CHECK_PACKET_SIZE(recv_data,8);
-
     uint64 guid;
     recv_data >> guid;
 
@@ -562,8 +553,6 @@ void WorldSession::HandleCharDeleteOpcode( WorldPacket & recv_data )
 
 void WorldSession::HandlePlayerLoginOpcode( WorldPacket & recv_data )
 {
-    CHECK_PACKET_SIZE(recv_data,8);
-
     if(PlayerLoading() || GetPlayer() != NULL)
     {
         sLog.outError("Player tryes to login again, AccountId = %d",GetAccountId());
@@ -638,12 +627,9 @@ void WorldSession::HandlePlayerLogin(LoginQueryHolder * holder)
     data << pCurrChar->GetOrientation();
     SendPacket(&data);
 
-    data.Initialize( SMSG_ACCOUNT_DATA_TIMES, 4+1+8*4 );    // changed in WotLK
-    data << uint32(time(NULL));                             // unix time of something
-    data << uint8(1);
-    for(int i = 0; i < NUM_ACCOUNT_DATA_TYPES; ++i)
-        data << uint32(GetAccountData(i)->Time);            // also unix time
-    SendPacket(&data);
+    // load player specific part before send times
+    LoadAccountData(holder->GetResult(PLAYER_LOGIN_QUERY_LOADACCOUNTDATA),PER_CHARACTER_CACHE_MASK);
+    SendAccountDataTimes();
 
     data.Initialize(SMSG_FEATURE_SYSTEM_STATUS, 2);         // added in 2.2.0
     data << uint8(2);                                       // unknown value
@@ -848,8 +834,6 @@ void WorldSession::HandlePlayerLogin(LoginQueryHolder * holder)
 
 void WorldSession::HandleSetFactionAtWar( WorldPacket & recv_data )
 {
-    CHECK_PACKET_SIZE(recv_data,4+1);
-
     DEBUG_LOG( "WORLD: Received CMSG_SET_FACTION_ATWAR" );
 
     uint32 repListID;
@@ -864,8 +848,6 @@ void WorldSession::HandleSetFactionAtWar( WorldPacket & recv_data )
 //I think this function is never used :/ I dunno, but i guess this opcode not exists
 void WorldSession::HandleSetFactionCheat( WorldPacket & /*recv_data*/ )
 {
-    //CHECK_PACKET_SIZE(recv_data,4+4);
-
     sLog.outError("WORLD SESSION: HandleSetFactionCheat, not expected call, please report.");
     /*
         uint32 FactionID;
@@ -898,8 +880,6 @@ void WorldSession::HandleMeetingStoneInfo( WorldPacket & /*recv_data*/ )
 
 void WorldSession::HandleTutorialFlag( WorldPacket & recv_data )
 {
-    CHECK_PACKET_SIZE(recv_data,4);
-
     uint32 iFlag;
     recv_data >> iFlag;
 
@@ -932,8 +912,6 @@ void WorldSession::HandleTutorialReset( WorldPacket & /*recv_data*/ )
 
 void WorldSession::HandleSetWatchedFactionOpcode(WorldPacket & recv_data)
 {
-    CHECK_PACKET_SIZE(recv_data,4);
-
     DEBUG_LOG("WORLD: Received CMSG_SET_WATCHED_FACTION");
     uint32 fact;
     recv_data >> fact;
@@ -942,8 +920,6 @@ void WorldSession::HandleSetWatchedFactionOpcode(WorldPacket & recv_data)
 
 void WorldSession::HandleSetFactionInactiveOpcode(WorldPacket & recv_data)
 {
-    CHECK_PACKET_SIZE(recv_data,4+1);
-
     DEBUG_LOG("WORLD: Received CMSG_SET_FACTION_INACTIVE");
     uint32 replistid;
     uint8 inactive;
@@ -966,8 +942,6 @@ void WorldSession::HandleShowingCloakOpcode( WorldPacket & /*recv_data*/ )
 
 void WorldSession::HandleCharRenameOpcode(WorldPacket& recv_data)
 {
-    CHECK_PACKET_SIZE(recv_data, 8+1);
-
     uint64 guid;
     std::string newname;
 
@@ -1052,7 +1026,6 @@ void WorldSession::HandleSetPlayerDeclinedNames(WorldPacket& recv_data)
 {
     uint64 guid;
 
-    CHECK_PACKET_SIZE(recv_data, 8);
     recv_data >> guid;
 
     // not accept declined names for unsupported languages
@@ -1088,7 +1061,6 @@ void WorldSession::HandleSetPlayerDeclinedNames(WorldPacket& recv_data)
     std::string name2;
     DeclinedName declinedname;
 
-    CHECK_PACKET_SIZE(recv_data, recv_data.rpos() + 1);
     recv_data >> name2;
 
     if(name2 != name)                                       // character have different name
@@ -1102,7 +1074,6 @@ void WorldSession::HandleSetPlayerDeclinedNames(WorldPacket& recv_data)
 
     for(int i = 0; i < MAX_DECLINED_NAME_CASES; ++i)
     {
-        CHECK_PACKET_SIZE(recv_data, recv_data.rpos() + 1);
         recv_data >> declinedname.name[i];
         if(!normalizePlayerName(declinedname.name[i]))
         {
@@ -1141,8 +1112,6 @@ void WorldSession::HandleSetPlayerDeclinedNames(WorldPacket& recv_data)
 void WorldSession::HandleAlterAppearance( WorldPacket & recv_data )
 {
     sLog.outDebug("CMSG_ALTER_APPEARANCE");
-
-    CHECK_PACKET_SIZE(recv_data, 4+4+4);
 
     uint32 Hair, Color, FacialHair;
     recv_data >> Hair >> Color >> FacialHair;
@@ -1190,8 +1159,6 @@ void WorldSession::HandleAlterAppearance( WorldPacket & recv_data )
 
 void WorldSession::HandleRemoveGlyph( WorldPacket & recv_data )
 {
-    CHECK_PACKET_SIZE(recv_data, 4);
-
     uint32 slot;
     recv_data >> slot;
 
@@ -1214,15 +1181,11 @@ void WorldSession::HandleRemoveGlyph( WorldPacket & recv_data )
 
 void WorldSession::HandleCharCustomize(WorldPacket& recv_data)
 {
-    CHECK_PACKET_SIZE(recv_data, 8+1);
-
     uint64 guid;
     std::string newname;
 
     recv_data >> guid;
     recv_data >> newname;
-
-    CHECK_PACKET_SIZE(recv_data, recv_data.rpos()+1+1+1+1+1+1);
 
     uint8 gender, skin, face, hairStyle, hairColor, facialHair;
     recv_data >> gender >> skin >> hairColor >> hairStyle >> facialHair >> face;
@@ -1316,18 +1279,14 @@ void WorldSession::HandleEquipmentSetSave(WorldPacket &recv_data)
     if(!recv_data.readPackGUID(setGuid))
         return;
 
-    CHECK_PACKET_SIZE(recv_data, recv_data.rpos() + 4);
-
     uint32 index;
     recv_data >> index;
     if(index >= MAX_EQUIPMENT_SET_INDEX)                    // client set slots amount
         return;
 
-    CHECK_PACKET_SIZE(recv_data, recv_data.rpos() + 1);
     std::string name;
     recv_data >> name;
 
-    CHECK_PACKET_SIZE(recv_data, recv_data.rpos() + 1);
     std::string iconName;
     recv_data >> iconName;
 
@@ -1379,8 +1338,6 @@ void WorldSession::HandleEquipmentSetUse(WorldPacket &recv_data)
         uint64 itemGuid;
         if(!recv_data.readPackGUID(itemGuid))
             return;
-
-        CHECK_PACKET_SIZE(recv_data, recv_data.rpos()+1+1);
 
         uint8 srcbag, srcslot;
         recv_data >> srcbag >> srcslot;

@@ -537,6 +537,18 @@ LogColors = ""
 #        Default: 7
 #                -1 (show all available quests marks)
 #
+#    Guild.EventLogRecordsCount
+#        Count of guild event log records stored in guild_eventlog table
+#        Increase to store more guild events in table, minimum is 100
+#        You can set it to very high value to prevent oldest guild events to be rewritten by latest guild events - but it can slow down performance
+#        Default: 100
+#
+#    Guild.BankEventLogRecordsCount
+#        Count of guild_bank event log records stored in guild_bank_eventlog table
+#        Increase to store more guild_bank events in table - minimum is 25 (GUILD_BANK_MAX_LOGS) for each guild_bank tab
+#        Useful when you don't want old log events to be overwritten by new, but increasing can slow down performance
+#        Default: 25
+#
 #    MaxPrimaryTradeSkill
 #        Max count that player can learn the primary trade skill.
 #        Default: 2
@@ -624,6 +636,8 @@ Instance.ResetTimeHour = 4
 Instance.UnloadDelay = 1800000
 Quests.LowLevelHideDiff = 4
 Quests.HighLevelHideDiff = 7
+Guild.EventLogRecordsCount = 100
+Guild.BankEventLogRecordsCount = 25
 MaxPrimaryTradeSkill = 2
 MinPetitionSigns = 9
 MaxGroupXPDistance = 74
@@ -836,6 +850,19 @@ ListenRange.Yell = 300
 #        Default: 0 (disible fake messages preventing)
 #                 1 (enabled fake messages preventing)
 #
+#    ChatStrictLinkChecking.Severity
+#        Check chat messages for ingame links to spells, items, quests, achievements etc.
+#        Default: 0 (disable link checking)
+#                 1 (check if only valid pipe commands are used. This prevents posting pictures for example)
+#                 2 (verifiy that pipe commands are used in a correct order)
+#                 3 (check if color, entry and name don't contradict each other. For correct work, please assure
+#                    that you have extracted locale DBCs of every language specific client playing on this server.)
+#
+#    ChatStrictLinkChecking.Kick
+#        Defines, what should be done if a message is considered to contain invalid pipe commands.
+#        Default: 0 (silently ignore message)
+#                 1 (kick players who sent invalid formed messages)
+#
 #    ChatFlood.MessageCount
 #        Chat anti-flood protection, haste message count to activate protection
 #        Default: 10
@@ -862,6 +889,8 @@ ListenRange.Yell = 300
 ###################################################################################################################
 
 ChatFakeMessagePreventing = 0
+ChatStrictLinkChecking.Severity = 0
+ChatStrictLinkChecking.Kick = 0
 ChatFlood.MessageCount = 10
 ChatFlood.MessageDelay = 1
 ChatFlood.MuteTime = 10
